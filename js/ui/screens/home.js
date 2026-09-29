@@ -171,7 +171,7 @@ export function mapScreen(main, params, app) {
     const W = Math.min(main.clientWidth || 360, 560) - 8;
     const worlds = worldsOf(track);
     main.innerHTML = `
-      <div class="map" data-track="${track}">
+      <div class="map">
         ${trackTabs(s, track)}
         ${heroHtml(s, cur, track)}
         ${worlds.map((w, i) => worldHtml(w, s, W, cur, i === 0)).join("")}
@@ -188,7 +188,8 @@ export function mapScreen(main, params, app) {
   render(true);
 
   main.addEventListener("click", (e) => {
-    const t = e.target.closest("[data-track]");
+    // Solo los botones cambian de ruta (no cualquier contenedor con ese atributo).
+    const t = e.target.closest("button[data-track]");
     if (t) {
       sfx.tap();
       track = t.dataset.track;

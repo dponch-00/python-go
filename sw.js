@@ -2,7 +2,7 @@
 // La lista ASSETS y CACHE las regenera `node tools/update-sw.mjs` (ejecútalo antes de publicar).
 
 // ASSETS:start
-const CACHE = "pygo-1.1.0-b8c86d29";
+const CACHE = "pygo-1.1.1-5f15bc1d";
 const ASSETS = [
   "./",
   "css/app.css",

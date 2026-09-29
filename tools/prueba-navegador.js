@@ -76,6 +76,34 @@ export async function correr({ detenerEnFallo = true } = {}) {
   return estado();
 }
 
+// Abre niveles tocando el mapa (botón «Jugar» y un círculo de nivel), como lo haría una persona.
+export async function probarMapa() {
+  const { app } = await import(new URL("../js/main.js", import.meta.url));
+  const fallos = [];
+  for (const tab of ["base", "maze", "algo"]) {
+    app.replace("map", { track: tab });
+    await until(() => q(".map"), 3000);
+    const jugar = q('.hero [data-direct]');
+    if (!jugar) continue; // ruta bloqueada o completa
+    jugar.click();
+    if (!(await until(() => q(".puzzle"), 3000))) fallos.push(`«Jugar» no abre el nivel en la ruta ${tab}`);
+  }
+  app.replace("map", { track: "base" });
+  await until(() => q(".map"), 3000);
+  const nodo = q(".node:not([disabled])");
+  if (nodo) {
+    nodo.click();
+    const jugar = await until(() => q(".level-preview .btn.primary"), 2000);
+    if (!jugar) fallos.push("tocar un nivel del mapa no abre su tarjeta");
+    else {
+      jugar.click();
+      if (!(await until(() => q(".puzzle"), 3000))) fallos.push("«Jugar» en la tarjeta no abre el nivel");
+    }
+  }
+  app.replace("map");
+  return fallos.length ? fallos : "ok";
+}
+
 export function estado() {
   return {
     corriendo: running,
