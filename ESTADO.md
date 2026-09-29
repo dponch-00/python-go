@@ -24,9 +24,15 @@ También se probó en el navegador: errores de Python explicados en español con
 bucle infinito cortado a los 8 s sin congelar la app, Contrarreloj y Reto diario completos,
 precarga sin conexión (Pyodide y tipografías en caché) y el ciclo de actualización del service worker.
 
+## Publicado
+
+- Repo: https://github.com/dponch-00/python-go (rama `main`, GitHub Pages desde `/ (root)`).
+- Juego: https://dponch-00.github.io/python-go/ — comprobado el 2026-09-29: carga, service worker activo
+  y Python 3.14 ejecutándose desde el sitio publicado.
+- Para publicar cambios: `node tools/update-sw.mjs`, commit y push (Pages se actualiza en 1–2 minutos).
+
 ## Pendiente
 
-- Publicar: crear el repo público `python-go` en GitHub (`dponch-00`), hacer push y activar Pages.
 - Probarlo instalado en un celular real (Android/iPhone).
 - Ideas futuras: ranking global en línea (requiere un servicio como Supabase o Firebase), más mundos
   (archivos, módulos, `collections`, pruebas con `assert`), modo para dos jugadores.
