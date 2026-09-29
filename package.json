@@ -1,0 +1,10 @@
+{
+  "name": "python-go",
+  "private": true,
+  "type": "module",
+  "description": "Juego de acertijos por niveles para aprender Python (PWA)",
+  "scripts": {
+    "verify": "python tools/verify_levels.py",
+    "verify:arcade": "node tools/verify-arcade.mjs"
+  }
+}

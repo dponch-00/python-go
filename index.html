@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es" data-code="noche">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Python GO</title>
+  <meta name="description" content="Aprende Python resolviendo acertijos: 100 niveles en 10 mundos, Python real en tu dispositivo y sin anuncios.">
+  <meta name="theme-color" content="#F2F4F8">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Python GO">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@600;700;800&display=swap">
+  <link rel="stylesheet" href="css/app.css">
+  <script>
+    // Aplica el tema guardado antes de pintar, para evitar un destello de color.
+    try {
+      const idx = JSON.parse(localStorage.getItem("pygo:index"));
+      const s = idx && JSON.parse(localStorage.getItem("pygo:p:" + idx.active));
+      if (s) {
+        if (s.settings.theme !== "auto") document.documentElement.dataset.theme = s.settings.theme;
+        document.documentElement.dataset.code = s.settings.codeTheme;
+      }
+    } catch (e) {}
+  </script>
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div class="splash"><span class="logo"><span class="logo-py">Python</span><span class="logo-go">GO</span></span></div>
+    <noscript>Python GO necesita JavaScript activado.</noscript>
+  </div>
+</body>
+</html>
