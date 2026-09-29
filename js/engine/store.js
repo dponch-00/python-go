@@ -53,7 +53,10 @@ export function addDays(key, n) {
 }
 
 // ---------- Perfiles ----------
-export const AVATARS = ["🐍", "🦊", "🐼", "🐸", "🦉", "🐙", "🦄", "🐯", "🐧", "🐢", "🦖", "🐝"];
+export const AVATARS = [
+  "🐍", "🦊", "🐼", "🐸", "🦉", "🐙", "🦄", "🐯", "🐧", "🐢", "🦖", "🐝",
+  "🐱", "🐶", "🐰", "🦁", "🐨", "🐵", "🤖", "👽", "👻", "🐉", "🐣", "🦜",
+];
 
 export function newSave({ name, avatar, goal }) {
   const now = Date.now();

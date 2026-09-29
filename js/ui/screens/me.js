@@ -9,6 +9,7 @@ import { WORLDS, MAX_STARS, LEVELS } from "../../data/worlds.js";
 import { ensurePython, onPythonStatus, pythonStatus } from "../../engine/python.js";
 import { esc, fmt, toast, confirmBox, copyText } from "../dom.js";
 import { icon } from "../icons.js";
+import { em, avatar, ACH_EM } from "../emoji.js";
 import { codeBlock } from "../highlight.js";
 import { sfx } from "../sfx.js";
 import { VERSION } from "../../version.js";
@@ -56,7 +57,7 @@ export function meScreen(main, _params, app) {
   main.innerHTML = `
     <div class="page me">
       <section class="me-head card">
-        <span class="av huge">${esc(s.avatar)}</span>
+        <span class="av huge">${avatar(s.avatar)}</span>
         <div class="me-id">
           <h1>${esc(s.name)}</h1>
           <p class="rank">${esc(rankFor(lp.level))}</p>
@@ -81,7 +82,7 @@ export function meScreen(main, _params, app) {
       <section class="card">${weekChart(s)}</section>
 
       <section class="card">
-        <h2 class="card-title">Mundos</h2>
+        <h2 class="card-title">${em("map")} Mundos</h2>
         <ul class="worlds-list">
           ${WORLDS.map((w) => {
             const n = worldStars(s, w), tot = w.levels.length * 3, open = isWorldUnlocked(s, w);
@@ -96,15 +97,15 @@ export function meScreen(main, _params, app) {
       </section>
 
       <section class="card">
-        <h2 class="card-title">Logros <span class="muted">${got}/${ACHIEVEMENTS.length}</span></h2>
+        <h2 class="card-title">${em("trophy")} Logros <span class="muted">${got}/${ACHIEVEMENTS.length}</span></h2>
         <div class="ach-grid">
           ${ACHIEVEMENTS.map((a) => {
             const t = s.ach[a.id];
             return `<div class="ach ${t ? "on" : ""}" title="${esc(a.desc)}">
-              <span class="ach-i">${icon(a.icon)}</span>
+              <span class="ach-i">${em(ACH_EM[a.id] || "star")}</span>
               <b>${esc(a.name)}</b>
               <small>${esc(a.desc)}</small>
-              ${t ? `<small class="ach-d">${new Date(t).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}</small>` : a.gems ? `<small class="ach-g">${icon("gem")} ${a.gems}</small>` : ""}
+              ${t ? `<small class="ach-d">${new Date(t).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}</small>` : a.gems ? `<small class="ach-g">${em("gem")} ${a.gems}</small>` : ""}
             </div>`;
           }).join("")}
         </div>
@@ -134,19 +135,19 @@ export function shopScreen(root, _params, app) {
   function render() {
     root.innerHTML = `
       <div class="page narrow shop">
-        ${subHead("Tienda", app, `<span class="pill gems static">${icon("gem")}<b>${fmt(s.gems)}</b></span>`)}
+        ${subHead("Tienda", app, `<span class="pill gems static">${em("gem")}<b>${fmt(s.gems)}</b></span>`)}
         <p class="lead">Gana gemas con estrellas nuevas, jefes, logros, el Reto diario y el Contrarreloj.</p>
 
         <article class="shop-item card">
-          <div class="si-icon freeze">${icon("shield")}</div>
+          <div class="si-icon freeze">${em("snowflake")}</div>
           <div class="si-main">
             <h2>Protector de racha</h2>
             <p>Si un día no juegas, se usa solo y tu racha sigue viva. Tienes <b>${s.streak.freezes}/${FREEZE_MAX}</b>.</p>
           </div>
-          <button class="btn primary small" data-buy="freeze" ${s.streak.freezes >= FREEZE_MAX || s.gems < FREEZE_COST ? "disabled" : ""}>${icon("gem")} ${FREEZE_COST}</button>
+          <button class="btn primary small" data-buy="freeze" ${s.streak.freezes >= FREEZE_MAX || s.gems < FREEZE_COST ? "disabled" : ""}>${em("gem")} ${FREEZE_COST}</button>
         </article>
 
-        <h2 class="section-title">Temas para el código</h2>
+        <h2 class="section-title">${em("palette")} Temas para el código</h2>
         <div class="theme-grid">
           ${CODE_THEMES.map((t) => {
             const owned = s.owned.themes.includes(t.id);
@@ -157,7 +158,7 @@ export function shopScreen(root, _params, app) {
                 <b>${t.name}</b>
                 ${using ? `<span class="tag">En uso</span>`
                   : owned ? `<button class="btn ghost small" data-use="${t.id}">Usar</button>`
-                  : `<button class="btn primary small" data-theme="${t.id}" ${s.gems < t.price ? "disabled" : ""}>${icon("gem")} ${t.price}</button>`}
+                  : `<button class="btn primary small" data-theme="${t.id}" ${s.gems < t.price ? "disabled" : ""}>${em("gem")} ${t.price}</button>`}
               </div>
             </article>`;
           }).join("")}
@@ -207,7 +208,7 @@ export function settingsScreen(root, _params, app) {
           <h2 class="card-title">Jugador</h2>
           <label class="field"><span>Nombre</span><input id="set-name" maxlength="16" value="${esc(s.name)}"></label>
           <div class="field"><span>Avatar</span>
-            <div class="avatars">${store.AVATARS.map((a) => `<button type="button" class="av-pick ${a === s.avatar ? "on" : ""}" data-av="${a}" aria-label="Avatar ${a}">${a}</button>`).join("")}</div>
+            <div class="avatars">${store.AVATARS.map((a) => `<button type="button" class="av-pick ${a === s.avatar ? "on" : ""}" data-av="${a}" aria-label="Avatar ${a}">${avatar(a)}</button>`).join("")}</div>
           </div>
           <div class="field"><span>Meta diaria</span>${seg("goal", DAILY_GOALS.map((g) => [g.xp, `${g.name} · ${g.xp}`]), set.goal)}</div>
         </section>

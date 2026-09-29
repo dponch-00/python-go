@@ -6,6 +6,7 @@ import {
 } from "../../engine/game.js";
 import { esc, fmt, modal } from "../dom.js";
 import { icon, snakeHead } from "../icons.js";
+import { em } from "../emoji.js";
 import { sfx } from "../sfx.js";
 
 const GAP = 100; // separación vertical entre niveles
@@ -47,7 +48,7 @@ function worldHtml(w, s, W, cur) {
       const isCur = i === curIdx;
       const state = isCur ? "cur" : r?.done ? "done" : open ? "open" : "locked";
       const label = `Nivel ${lv.num}: ${lv.title}${r?.done ? `, ${r.stars} ${r.stars === 1 ? "estrella" : "estrellas"}` : open ? "" : ", bloqueado"}`;
-      const face = isCur ? snakeHead("head") : !open ? icon("lock") : lv.boss ? icon("crown") : `<span class="n">${lv.num}</span>`;
+      const face = isCur ? snakeHead("head") : !open ? icon("lock") : lv.boss ? em("crown", "node-em") : `<span class="n">${lv.num}</span>`;
       return `
         <button class="node ${state}${lv.boss ? " boss" : ""}" style="left:${pts[i][0]}px;top:${pts[i][1]}px"
           data-level="${lv.id}" ${open ? "" : "disabled"} aria-label="${esc(label)}">
@@ -61,7 +62,8 @@ function worldHtml(w, s, W, cur) {
   return `
     <section class="world ${unlocked ? "" : "locked"}" style="--h:${w.hue}" aria-label="Mundo ${w.id}: ${esc(w.name)}">
       <header class="world-head">
-        <div>
+        <div class="w-art">${em(w.art || `w${w.id}`)}</div>
+        <div class="w-text">
           <p class="w-num">Mundo ${w.id}</p>
           <h2>${esc(w.name)}</h2>
           <p class="w-topic">${esc(w.topic)}</p>
@@ -105,8 +107,8 @@ function heroHtml(s, cur) {
         <p class="goal-cap">XP de hoy</p>
       </div>
       ${due || canDoDaily(s) ? `<div class="hero-chips">
-        ${canDoDaily(s) ? `<button class="chip gold" data-act="go" data-to="daily">${icon("calendar")} Reto diario disponible</button>` : ""}
-        ${due ? `<button class="chip" data-act="go" data-to="games">${icon("repeat")} ${due} para repasar</button>` : ""}
+        ${canDoDaily(s) ? `<button class="chip gold" data-act="go" data-to="daily">${em("calendar")} Reto diario disponible</button>` : ""}
+        ${due ? `<button class="chip" data-act="go" data-to="games">${em("repeat")} ${due} para repasar</button>` : ""}
       </div>` : ""}
     </section>`;
 }

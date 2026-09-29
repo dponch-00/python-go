@@ -3,8 +3,9 @@ import { ensurePython, runPython, onPythonStatus, pythonStatus, explainError } f
 import { checkAchievements } from "../../engine/game.js";
 import { esc } from "../dom.js";
 import { icon } from "../icons.js";
+import { em } from "../emoji.js";
 import { py } from "../../data/py.js";
-import { createEditor } from "../editor.js";
+import { createCodeEditor } from "../code-editor.js";
 import { sfx } from "../sfx.js";
 
 const EXAMPLES = [
@@ -70,7 +71,7 @@ export function consoleScreen(main, _params, app) {
 
   main.innerHTML = `
     <div class="page console">
-      <h1 class="page-title">Consola</h1>
+      <h1 class="page-title">${em("laptop", "title-em")} Consola</h1>
       <p class="lead">Escribe cualquier código y ejecútalo. Corre en tu propio dispositivo, sin servidor.</p>
       <div class="chips" role="group" aria-label="Ejemplos">
         ${EXAMPLES.map((e, i) => `<button class="chip" data-ex="${i}">${esc(e.name)}</button>`).join("")}
@@ -85,7 +86,8 @@ export function consoleScreen(main, _params, app) {
       <p class="muted small">Atajo: Ctrl + Enter ejecuta. <code class="ic">input()</code> no está disponible: usa variables.</p>
     </div>`;
 
-  const ed = createEditor(main.querySelector(".ed-host"), {
+  const edHost = main.querySelector(".ed-host");
+  const edReady = createCodeEditor(edHost, {
     value: saved ?? EXAMPLES[0].code + "\n",
     onChange: (v) => {
       try {
@@ -93,7 +95,8 @@ export function consoleScreen(main, _params, app) {
       } catch {}
     },
     onRun: () => run(),
-  });
+    label: "Consola de Python",
+  }).then((ed) => (edHost.editor = ed));
   const statusEl = main.querySelector(".py-status");
   const outEl = main.querySelector(".out");
 
@@ -111,6 +114,7 @@ export function consoleScreen(main, _params, app) {
 
   async function run() {
     sfx.tap();
+    const ed = await edReady;
     outEl.hidden = false;
     outEl.innerHTML = `<p class="muted small"><span class="spin"></span> Ejecutando…</p>`;
     let res;
@@ -144,16 +148,18 @@ export function consoleScreen(main, _params, app) {
     const ex = e.target.closest("[data-ex]");
     if (ex) {
       sfx.tap();
-      ed.value = EXAMPLES[+ex.dataset.ex].code + "\n";
+      edReady.then((ed) => (ed.value = EXAMPLES[+ex.dataset.ex].code + "\n"));
       outEl.hidden = true;
       return;
     }
     const x = e.target.closest("[data-x]")?.dataset.x;
     if (x === "run") run();
     if (x === "clear") {
-      ed.value = "";
+      edReady.then((ed) => {
+        ed.value = "";
+        ed.focus();
+      });
       outEl.hidden = true;
-      ed.focus();
     }
   });
 

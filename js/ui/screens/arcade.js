@@ -5,6 +5,7 @@ import { applyArcade, applyDaily, canDoDaily, recordAnswer } from "../../engine/
 import { dayKey } from "../../engine/store.js";
 import { esc, fmt, countUp, reducedMotion } from "../dom.js";
 import { icon } from "../icons.js";
+import { em } from "../emoji.js";
 import { codeBlock } from "../highlight.js";
 import { sfx } from "../sfx.js";
 import { confetti } from "../confetti.js";
@@ -37,12 +38,12 @@ export function arcadeScreen(root, _params, app) {
       <div class="quiz intro">
         <button class="icon-btn corner" data-x="close" aria-label="Salir">${icon("close")}</button>
         <div class="intro-card card">
-          <div class="intro-icon">${icon("clock")}</div>
+          <div class="intro-icon">${em("stopwatch")}</div>
           <h1>Contrarreloj</h1>
           <ul class="rules">
-            <li>${icon("clock")} ${ARCADE_TIME} segundos; cada acierto suma ${ARCADE_BONUS_TIME} s</li>
-            <li>${icon("heart")} ${HEARTS} vidas</li>
-            <li>${icon("bolt")} Racha de 3 aciertos = puntos ×1.5, ×2, ×2.5…</li>
+            <li>${em("hourglass")} ${ARCADE_TIME} segundos; cada acierto suma ${ARCADE_BONUS_TIME} s</li>
+            <li>${em("heart")} ${HEARTS} vidas</li>
+            <li>${em("zap")} Racha de 3 aciertos = puntos ×1.5, ×2, ×2.5…</li>
           </ul>
           <p class="muted">Récord actual: <b>${fmt(s.arcade.best)}</b> pts</p>
           <button class="btn primary big" data-x="start">${icon("play")} Empezar</button>
@@ -70,10 +71,10 @@ export function arcadeScreen(root, _params, app) {
     const fill = $(".tbar-fill"), tn = $(".tbar-n"), heartsEl = $(".hearts"), scEl = $(".sc-n"), stEl = $(".sc-streak");
     const qEl = $(".quiz-q"), optsEl = $(".opts");
 
-    const paintHearts = () => (heartsEl.innerHTML = Array.from({ length: HEARTS }, (_, i) => icon("heart", i < hearts ? "on" : "")).join(""));
+    const paintHearts = () => (heartsEl.innerHTML = Array.from({ length: HEARTS }, (_, i) => em("heart", i < hearts ? "on" : "off")).join(""));
     const paintStreak = () => {
       const { mult } = arcadePoints(1, streak);
-      stEl.innerHTML = streak >= 3 ? `${icon("bolt")} ×${mult.toFixed(1)}` : "";
+      stEl.innerHTML = streak >= 3 ? `${em("zap")} ×${mult.toFixed(1)}` : "";
     };
     paintHearts();
 
@@ -157,7 +158,7 @@ export function arcadeScreen(root, _params, app) {
             </dl>
             <div class="rewards">
               <span class="reward xp">+${sum.xp} XP</span>
-              ${sum.gems ? `<span class="reward gem">${icon("gem")} +${sum.gems}</span>` : ""}
+              ${sum.gems ? `<span class="reward gem">${em("gem")} +${sum.gems}</span>` : ""}
             </div>
           </div>
           <div class="res-actions">
@@ -202,13 +203,13 @@ export function dailyScreen(root, _params, app) {
       <div class="quiz intro">
         <button class="icon-btn corner" data-x="close" aria-label="Salir">${icon("close")}</button>
         <div class="intro-card card">
-          <div class="intro-icon">${icon("calendar")}</div>
+          <div class="intro-icon">${em("calendar")}</div>
           <p class="eyebrow">${new Date().toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" })}</p>
           <h1>Reto diario</h1>
           <ul class="rules">
-            <li>${icon("flag")} ${DAILY_COUNT} preguntas, de fácil a difícil</li>
-            <li>${icon("star")} 25 puntos por acierto + bono por rapidez</li>
-            <li>${icon("gem")} ${rewarded ? "Recompensa disponible hoy" : "Ya lo completaste hoy: esto es práctica"}</li>
+            <li>${em("flag")} ${DAILY_COUNT} preguntas, de fácil a difícil</li>
+            <li>${em("star")} 25 puntos por acierto + bono por rapidez</li>
+            <li>${em("gem")} ${rewarded ? "Recompensa disponible hoy" : "Ya lo completaste hoy: esto es práctica"}</li>
           </ul>
           <button class="btn primary big" data-x="start">${icon("play")} ${rewarded ? "Empezar" : "Practicar"}</button>
         </div>
@@ -252,7 +253,7 @@ export function dailyScreen(root, _params, app) {
             <div><dt>Tiempo</dt><dd>${Math.round(secs)} s</dd></div>
             ${bonus ? `<div><dt>Bono de rapidez</dt><dd>+${bonus}</dd></div>` : ""}
           </dl>
-          ${sum ? `<div class="rewards"><span class="reward xp">+${sum.xp} XP</span><span class="reward gem">${icon("gem")} +${sum.gems}</span></div>` : ""}
+          ${sum ? `<div class="rewards"><span class="reward xp">+${sum.xp} XP</span><span class="reward gem">${em("gem")} +${sum.gems}</span></div>` : ""}
           <details class="review-answers">
             <summary>Ver respuestas</summary>
             ${answers.map((a, k) => `

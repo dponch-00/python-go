@@ -7,7 +7,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const INCLUDE = [/^index\.html$/, /^manifest\.webmanifest$/, /^css\/.+\.css$/, /^js\/.+\.(js|py)$/, /^icons\/.+\.(png|svg)$/];
+const INCLUDE = [/^index\.html$/, /^manifest\.webmanifest$/, /^css\/.+\.css$/, /^js\/.+\.(js|py)$/, /^icons\/.+\.(png|svg)$/, /^fonts\/.+\.woff2$/, /^img\/.+\.webp$/];
 
 function walk(dir) {
   return readdirSync(dir).flatMap((name) => {

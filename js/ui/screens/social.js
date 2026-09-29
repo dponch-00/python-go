@@ -5,6 +5,7 @@ import { levelFromXp, rankFor, DAILY_GOALS } from "../../engine/scoring.js";
 import { MAX_STARS, LEVELS, WORLDS } from "../../data/worlds.js";
 import { esc, fmt, toast } from "../dom.js";
 import { icon, logoHtml } from "../icons.js";
+import { em, avatar } from "../emoji.js";
 import { sfx } from "../sfx.js";
 
 const BOARDS = [
@@ -27,15 +28,15 @@ export function rankingScreen(main, _params, app) {
     const rows = players.map((p) => ({ p, v: board.value(p) })).sort((a, b) => b.v - a.v || b.p.xp - a.p.xp);
     main.innerHTML = `
       <div class="page ranking">
-        <h1 class="page-title">Ranking</h1>
+        <h1 class="page-title">${em("chart", "title-em")} Ranking</h1>
         <div class="seg" role="tablist" aria-label="Clasificación">
           ${BOARDS.map((b) => `<button role="tab" aria-selected="${b === board}" class="${b === board ? "on" : ""}" data-b="${b.id}">${b.label}</button>`).join("")}
         </div>
         <ol class="board">
           ${rows.map(({ p, v }, i) => `
             <li class="${p.id === app.save.id ? "me" : ""} ${i < 3 && v > 0 ? "top" + (i + 1) : ""}">
-              <span class="pos">${i + 1}</span>
-              <span class="av">${esc(p.avatar)}</span>
+              <span class="pos">${i < 3 && v > 0 ? em(`medal${i + 1}`, "", `Lugar ${i + 1}`) : i + 1}</span>
+              <span class="av">${avatar(p.avatar)}</span>
               <span class="who"><b>${esc(p.name)}</b><small>Nv ${levelFromXp(p.xp)} · ${esc(rankFor(levelFromXp(p.xp)))}</small></span>
               <span class="val"><b>${fmt(v)}</b><small>${board.unit}</small></span>
             </li>`).join("")}
@@ -75,7 +76,7 @@ export function profilesScreen(root, _params, app) {
       <div class="who-grid">
         ${players.map((p) => `
           <button class="who-card ${app.save?.id === p.id ? "on" : ""}" data-id="${p.id}">
-            <span class="av big">${esc(p.avatar)}</span>
+            <span class="av big">${avatar(p.avatar)}</span>
             <b>${esc(p.name)}</b>
             <small>Nv ${levelFromXp(p.xp)} · ${fmt(totalPoints(p))} pts</small>
           </button>`).join("")}
@@ -98,7 +99,7 @@ export function profilesScreen(root, _params, app) {
 // ================= Nuevo jugador =================
 export function onboardScreen(root, _params, app) {
   const first = store.getIndex().list.length === 0;
-  let avatar = store.AVATARS[Math.floor(Math.random() * store.AVATARS.length)];
+  let avatarCh = store.AVATARS[Math.floor(Math.random() * store.AVATARS.length)];
   let goal = 60;
 
   root.innerHTML = `
@@ -110,8 +111,14 @@ export function onboardScreen(root, _params, app) {
       </header>
       ${first ? `
         <section class="pitch">
+          <div class="mascot">${em("a-snake", "", "")}${em("sparkles", "spark")}</div>
           <h1>Aprende Python resolviendo acertijos</h1>
           <p class="lead">${LEVELS.length} niveles en ${WORLDS.length} mundos, desde tu primer <code class="ic">print()</code> hasta clases y decoradores. Con Python real, sin anuncios y sin conexión.</p>
+          <ul class="feats">
+            <li>${em("trophy")}<span><b>${LEVELS.length} niveles</b> con estrellas y jefes</span></li>
+            <li>${em("laptop")}<span><b>Python real</b> en tu dispositivo</span></li>
+            <li>${em("fire")}<span><b>Rachas, logros</b> y retos diarios</span></li>
+          </ul>
         </section>` : `<h1 class="page-title center">Nuevo jugador</h1>`}
       <form class="card form" novalidate>
         <label class="field">
@@ -121,7 +128,7 @@ export function onboardScreen(root, _params, app) {
         <fieldset class="field">
           <legend>Elige tu avatar</legend>
           <div class="avatars" role="radiogroup">
-            ${store.AVATARS.map((a) => `<button type="button" role="radio" class="av-pick ${a === avatar ? "on" : ""}" aria-checked="${a === avatar}" data-av="${a}">${a}</button>`).join("")}
+            ${store.AVATARS.map((a) => `<button type="button" role="radio" class="av-pick ${a === avatarCh ? "on" : ""}" aria-checked="${a === avatarCh}" data-av="${a}">${avatar(a)}</button>`).join("")}
           </div>
         </fieldset>
         <fieldset class="field">
@@ -142,7 +149,7 @@ export function onboardScreen(root, _params, app) {
     const av = e.target.closest("[data-av]");
     if (av) {
       sfx.pick();
-      avatar = av.dataset.av;
+      avatarCh = av.dataset.av;
       root.querySelectorAll("[data-av]").forEach((b) => {
         b.classList.toggle("on", b === av);
         b.setAttribute("aria-checked", b === av);
@@ -168,7 +175,7 @@ export function onboardScreen(root, _params, app) {
     }
     sfx.good();
     app.persist(true);
-    const save = store.createProfile({ name, avatar, goal });
+    const save = store.createProfile({ name, avatar: avatarCh, goal });
     save.settings.goal = goal;
     store.persist(save, true);
     app.useProfile(save);

@@ -1,5 +1,6 @@
 // Utilidades de DOM: escape, mini-markdown, avisos y ventanas modales.
 import { icon } from "./icons.js";
+import { em } from "./emoji.js";
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -29,7 +30,7 @@ export function reducedMotion() {
 
 // ---------- Avisos breves ----------
 let toastBox;
-export function toast(msg, { icon: ic = null, kind = "" } = {}) {
+export function toast(msg, { icon: ic = null, emoji = null, kind = "" } = {}) {
   if (!toastBox) {
     toastBox = document.createElement("div");
     toastBox.className = "toasts";
@@ -39,7 +40,7 @@ export function toast(msg, { icon: ic = null, kind = "" } = {}) {
   }
   const t = document.createElement("div");
   t.className = `toast ${kind}`;
-  t.innerHTML = `${ic ? icon(ic) : ""}<span>${msg}</span>`;
+  t.innerHTML = `${emoji ? em(emoji) : ic ? icon(ic) : ""}<span>${msg}</span>`;
   toastBox.append(t);
   setTimeout(() => t.classList.add("out"), 2600);
   setTimeout(() => t.remove(), 3000);

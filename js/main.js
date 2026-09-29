@@ -2,8 +2,9 @@
 import * as store from "./engine/store.js";
 import { streakNow, todayXp, dueReviews } from "./engine/game.js";
 import { levelProgress, rankFor } from "./engine/scoring.js";
-import { $, esc, fmt, modal, toast } from "./ui/dom.js";
+import { $, esc, fmt, modal, toast, reducedMotion } from "./ui/dom.js";
 import { icon, logoHtml } from "./ui/icons.js";
+import { em, avatar, ACH_EM } from "./ui/emoji.js";
 import { configureSfx, sfx } from "./ui/sfx.js";
 import { confetti } from "./ui/confetti.js";
 import { mapScreen } from "./ui/screens/home.js";
@@ -87,10 +88,10 @@ export const app = {
     if (!s || !box) return;
     const st = streakNow(s);
     const lp = levelProgress(s.xp);
-    box.querySelector("[data-hud=avatar]").textContent = s.avatar;
-    box.querySelector("[data-hud=streak]").innerHTML = `${icon("flame")}<b>${st.count}</b>`;
+    box.querySelector("[data-hud=avatar]").innerHTML = avatar(s.avatar);
+    box.querySelector("[data-hud=streak]").innerHTML = `${em("fire")}<b>${st.count}</b>`;
     box.querySelector("[data-hud=streak]").classList.toggle("cold", !st.today);
-    box.querySelector("[data-hud=gems]").innerHTML = `${icon("gem")}<b>${fmt(s.gems)}</b>`;
+    box.querySelector("[data-hud=gems]").innerHTML = `${em("gem")}<b>${fmt(s.gems)}</b>`;
     box.querySelector("[data-hud=lvl]").innerHTML = `<span class="ring" style="--p:${lp.pct}"></span><b>Nv ${lp.level}</b>`;
     const rail = $(".rail");
     if (rail) rail.innerHTML = railHtml();
@@ -101,11 +102,11 @@ export const app = {
     sum.achievements?.forEach((a, i) =>
       setTimeout(() => {
         sfx.coin();
-        toast(`Logro: <b>${esc(a.name)}</b>${a.gems ? ` · +${a.gems} ${icon("gem")}` : ""}`, { icon: "trophy", kind: "gold" });
+        toast(`Logro: <b>${esc(a.name)}</b>${a.gems ? ` · +${a.gems} ${em("gem")}` : ""}`, { emoji: ACH_EM[a.id] || "trophy", kind: "gold" });
       }, 400 + i * 900)
     );
-    if (sum.goalReached) setTimeout(() => toast("¡Meta diaria cumplida!", { icon: "target", kind: "good" }), 200);
-    if (sum.usedFreeze) toast(`Tu protector de racha salvó ${sum.usedFreeze === 1 ? "un día" : sum.usedFreeze + " días"}`, { icon: "shield" });
+    if (sum.goalReached) setTimeout(() => toast("¡Meta diaria cumplida!", { emoji: "target", kind: "good" }), 200);
+    if (sum.usedFreeze) toast(`Tu protector de racha salvó ${sum.usedFreeze === 1 ? "un día" : sum.usedFreeze + " días"}`, { emoji: "shield" });
     if (sum.levelUp) {
       setTimeout(() => {
         document.querySelectorAll(".modal-wrap.levelup").forEach((m) => m.remove());
@@ -115,7 +116,7 @@ export const app = {
         modal({
           cls: "levelup",
           title: "¡Subiste de nivel!",
-          body: `<div class="lvl-big">${lp.level}</div><p class="center">Ahora eres <b>${esc(rankFor(lp.level))}</b>.</p>`,
+          body: `${em("party", "lvl-party")}<div class="lvl-big">${lp.level}</div><p class="center">Ahora eres <b>${esc(rankFor(lp.level))}</b>.</p>`,
           actions: [{ label: "¡Genial!", kind: "primary" }],
         });
       }, 700);
@@ -138,7 +139,7 @@ function railHtml() {
     </section>
     <section class="card rail-card">
       <h3>Racha</h3>
-      <p class="rail-streak ${st.today ? "" : "cold"}">${icon("flame")} <b>${st.count}</b> ${st.count === 1 ? "día" : "días"}</p>
+      <p class="rail-streak ${st.today ? "" : "cold"}">${em("fire")} <b>${st.count}</b> ${st.count === 1 ? "día" : "días"}</p>
       <p class="muted">${st.today ? "Ya jugaste hoy. ¡Vuelve mañana!" : "Completa un nivel hoy para mantenerla."}</p>
     </section>
     ${due ? `<section class="card rail-card"><h3>Repaso</h3><p>${due} ${due === 1 ? "nivel listo" : "niveles listos"} para repasar.</p><button class="btn small" data-act="go" data-to="games">Repasar</button></section>` : ""}`;
@@ -171,19 +172,24 @@ function show(route, params = {}) {
   if (!SCREENS[route]) route = "map";
   const def = SCREENS[route];
   if (!def.guest && !app.save) route = "profiles";
-  cleanup?.();
-  cleanup = null;
-  current = { route, params };
-  document.body.dataset.route = route;
-  window.scrollTo(0, 0);
-  if (SCREENS[route].tab) {
-    root.innerHTML = shellHtml(route);
-    app.hud();
-    cleanup = SCREENS[route].render($("#main"), params, app) || null;
-  } else {
-    root.innerHTML = `<div class="full"></div>`;
-    cleanup = SCREENS[route].render(root.firstElementChild, params, app) || null;
-  }
+  const first = !current;
+  const swap = () => {
+    cleanup?.();
+    cleanup = null;
+    current = { route, params };
+    document.body.dataset.route = route;
+    window.scrollTo(0, 0);
+    if (SCREENS[route].tab) {
+      root.innerHTML = shellHtml(route);
+      app.hud();
+      cleanup = SCREENS[route].render($("#main"), params, app) || null;
+    } else {
+      root.innerHTML = `<div class="full"></div>`;
+      cleanup = SCREENS[route].render(root.firstElementChild, params, app) || null;
+    }
+  };
+  if (!first && document.startViewTransition && !reducedMotion() && !document.hidden) document.startViewTransition(swap);
+  else swap();
 }
 
 // Navegación declarativa: cualquier elemento con data-act="go" data-to="ruta".

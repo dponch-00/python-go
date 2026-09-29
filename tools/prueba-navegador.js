@@ -39,9 +39,9 @@ async function solve(app, lv) {
   } else if (lv.t === "bug") q(`.bl[data-n="${lv.line}"]`).click();
   else if (lv.t === "code") {
     if (!(await until(() => q(".py-status.ready"), 30000))) return "Python no cargó";
-    const ta = q(".ed-ta");
-    ta.value = lv.sol + "\n";
-    ta.dispatchEvent(new Event("input"));
+    const host = q(".ed-host");
+    if (!(await until(() => host.editor, 15000))) return "el editor no cargó";
+    host.editor.value = lv.sol + "\n";
   }
   const btn = q('[data-x="check"]');
   if (btn.disabled) return "botón Comprobar deshabilitado";

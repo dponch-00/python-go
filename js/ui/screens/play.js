@@ -5,8 +5,9 @@ import { applyLevel, applyFail, recordAnswer, spendHint, isLevelUnlocked, nextLe
 import { ensurePython, runPython, onPythonStatus, pythonStatus, explainError } from "../../engine/python.js";
 import { esc, md, fmt, shuffle, toast, countUp } from "../dom.js";
 import { icon } from "../icons.js";
+import { em } from "../emoji.js";
 import { highlight, codeBlock } from "../highlight.js";
-import { createEditor } from "../editor.js";
+import { createCodeEditor } from "../code-editor.js";
 import { sfx } from "../sfx.js";
 import { confetti } from "../confetti.js";
 
@@ -333,7 +334,7 @@ export function levelScreen(root, params, app) {
         </div>
       </header>
       <div class="play-body">
-        ${lv.learn ? `<details class="learn"${firstTime ? " open" : ""}><summary>${icon("bulb")} Concepto</summary><div>${md(lv.learn)}</div></details>` : ""}
+        ${lv.learn ? `<details class="learn"${firstTime ? " open" : ""}><summary>${em("books")} Concepto</summary><div>${md(lv.learn)}</div></details>` : ""}
         <div class="q-head">
           <span class="type-chip">${esc(TYPE_LABEL[lv.t])}</span>
           <h1 class="q">${md(lv.q)}</h1>
@@ -342,7 +343,7 @@ export function levelScreen(root, params, app) {
         <div class="hint-box" hidden></div>
       </div>
       <footer class="play-foot">
-        <button class="btn ghost" data-x="hint">${icon("bulb")} Pista <span class="cost">${icon("gem")}${HINT_COST}</span></button>
+        <button class="btn ghost" data-x="hint">${em("bulb")} Pista <span class="cost">${em("gem")}${HINT_COST}</span></button>
         <button class="btn primary" data-x="check" disabled>Comprobar</button>
       </footer>
       <div class="feedback" hidden></div>
@@ -360,7 +361,7 @@ export function levelScreen(root, params, app) {
   function paintHearts() {
     const h = $(".hearts");
     if (h) {
-      h.innerHTML = Array.from({ length: HEARTS }, (_, i) => icon("heart", i < hearts ? "on" : "")).join("");
+      h.innerHTML = Array.from({ length: HEARTS }, (_, i) => em("heart", i < hearts ? "on" : "off")).join("");
       h.setAttribute("aria-label", `Vidas: ${hearts}`);
     }
     const t = $(".tries");
@@ -397,11 +398,13 @@ export function levelScreen(root, params, app) {
         <ul class="tests" hidden></ul>
       </div>`;
     const draft = loadDraft(s, lv);
-    const ed = createEditor(box.querySelector(".ed-host"), {
+    const edHost = box.querySelector(".ed-host");
+    const edReady = createCodeEditor(edHost, {
       value: draft ?? lv.starter + "\n",
       onChange: (v) => saveDraft(s, lv, v),
       onRun: () => run(),
-    });
+      label: "Tu código",
+    }).then((ed) => (edHost.editor = ed));
     const statusEl = box.querySelector(".py-status");
     const outEl = box.querySelector(".out");
     const testsEl = box.querySelector(".tests");
@@ -429,11 +432,12 @@ export function levelScreen(root, params, app) {
         ? `<div class="out-err"><b>${esc(res.err.type)}${res.err.line ? ` en la línea ${res.err.line}` : ""}:</b> ${esc(res.err.msg)}<p class="muted">${esc(explainError(res.err))}</p></div>`
         : "";
       outEl.innerHTML = `<p class="out-cap">Salida</p>${out}${err}`;
-      ed.markLine(res.err?.line || 0);
+      edReady.then((ed) => ed.markLine(res.err?.line || 0));
     }
 
     async function run() {
       sfx.tap();
+      const ed = await edReady;
       try {
         showOut(await runPython(ed.value, { pre: lv.pre || "" }));
       } catch {
@@ -445,13 +449,13 @@ export function levelScreen(root, params, app) {
       const x = e.target.closest("[data-x]")?.dataset.x;
       if (x === "run") run();
       if (x === "reset") {
-        ed.value = lv.starter + "\n";
+        (await edReady).value = lv.starter + "\n";
         outEl.hidden = testsEl.hidden = true;
       }
       if (x === "retry-py") ensurePython().catch(() => {});
       if (x === "reveal") {
         revealed = true;
-        ed.value = lv.sol + "\n";
+        (await edReady).value = lv.sol + "\n";
         toast("Esta es una solución posible. Estúdiala y pulsa Comprobar.", { icon: "eye" });
         e.target.closest("[data-x]").remove();
       }
@@ -463,6 +467,7 @@ export function levelScreen(root, params, app) {
         checkBtn.disabled = true;
         checkBtn.innerHTML = `<span class="spin"></span> Probando…`;
         let res;
+        const ed = await edReady;
         try {
           res = await runPython(ed.value, { pre: lv.pre || "", tests: lv.tests });
         } catch {
@@ -588,10 +593,10 @@ export function levelScreen(root, params, app) {
     app.persist();
     const hb = $(".hint-box");
     hb.hidden = false;
-    hb.innerHTML = `${icon("bulb")}<p>${md(lv.hint)}</p>`;
+    hb.innerHTML = `${em("bulb")}<p>${md(lv.hint)}</p>`;
     ctl.hintExtra?.();
     hintBtn.disabled = true;
-    hintBtn.innerHTML = `${icon("bulb")} Pista usada`;
+    hintBtn.innerHTML = `${em("bulb", "off")} Pista usada`;
   }
 
   root.addEventListener("click", (e) => {
@@ -637,9 +642,10 @@ export function resultScreen(root, _params, app) {
     <div class="result" style="--h:${w.hue}">
       <div class="res-card card">
         <p class="eyebrow">${mode === "review" ? "Repaso · " : ""}Mundo ${lv.world} · Nivel ${lv.num}</p>
+        ${lv.boss ? em("trophy", "res-trophy") : ""}
         <h1 class="res-title">${title}</h1>
         <div class="res-stars" aria-label="${run.stars} de 3 estrellas">
-          ${[0, 1, 2].map((i) => `<span class="big-star" data-i="${i}">${icon("star")}</span>`).join("")}
+          ${[0, 1, 2].map((i) => `<span class="big-star" data-i="${i}">${em("star")}</span>`).join("")}
         </div>
         <div class="res-total"><b class="num">0</b><span>puntos</span></div>
         <dl class="breakdown">
@@ -648,10 +654,10 @@ export function resultScreen(root, _params, app) {
         </dl>
         <div class="rewards">
           <span class="reward xp">+${fmt(sum.xp)} XP</span>
-          ${sum.gems ? `<span class="reward gem">${icon("gem")} +${sum.gems}</span>` : ""}
+          ${sum.gems ? `<span class="reward gem">${em("gem")} +${sum.gems}</span>` : ""}
           <span class="reward time">${icon("clock")} ${Math.round(run.seconds ?? 0) || Math.round(sum.record.time)} s</span>
         </div>
-        ${worldCleared && next ? `<p class="unlock">${icon("map")} Desbloqueaste el <b>Mundo ${next.world}: ${esc(worldOf(next).name)}</b></p>` : ""}
+        ${worldCleared && next ? `<p class="unlock">${em("map")} Desbloqueaste el <b>Mundo ${next.world}: ${esc(worldOf(next).name)}</b></p>` : ""}
       </div>
       <div class="res-actions">
         <button class="btn ghost" data-x="retry">${icon("refresh")} Repetir</button>

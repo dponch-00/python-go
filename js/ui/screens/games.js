@@ -4,6 +4,7 @@ import { DAILY_COUNT } from "../../engine/arcade.js";
 import { TYPE_LABEL } from "../../data/worlds.js";
 import { esc, fmt } from "../dom.js";
 import { icon } from "../icons.js";
+import { em } from "../emoji.js";
 
 export function gamesScreen(main, _params, app) {
   const s = app.save;
@@ -13,20 +14,20 @@ export function gamesScreen(main, _params, app) {
 
   main.innerHTML = `
     <div class="page games">
-      <h1 class="page-title">Juegos</h1>
+      <h1 class="page-title">${em("joystick", "title-em")} Juegos</h1>
 
       <article class="game-card daily ${daily ? "" : "done"}">
-        <div class="gc-icon">${icon("calendar")}</div>
+        <div class="gc-icon">${em("calendar")}</div>
         <div class="gc-main">
           <h2>Reto diario</h2>
           <p>${DAILY_COUNT} preguntas, las mismas para todos hoy. Mientras más rápido, más puntos.</p>
-          <p class="gc-meta">${daily ? `Recompensa: hasta ${20 + DAILY_COUNT * 5} XP y ${icon("gem")} 25` : `${icon("check")} Completado hoy · vuelve mañana`}</p>
+          <p class="gc-meta">${daily ? `Recompensa: hasta ${20 + DAILY_COUNT * 5} XP y ${em("gem")} 25` : `${icon("check")} Completado hoy · vuelve mañana`}</p>
         </div>
         <button class="btn ${daily ? "primary" : "ghost"}" data-act="go" data-to="daily">${daily ? "Jugar" : "Practicar"}</button>
       </article>
 
       <article class="game-card arcade">
-        <div class="gc-icon">${icon("clock")}</div>
+        <div class="gc-icon">${em("stopwatch")}</div>
         <div class="gc-main">
           <h2>Contrarreloj</h2>
           <p>60 segundos, 3 vidas y preguntas sin fin que se ponen más difíciles. Cada acierto suma 2 segundos.</p>
@@ -36,7 +37,7 @@ export function gamesScreen(main, _params, app) {
       </article>
 
       <article class="game-card review">
-        <div class="gc-icon">${icon("repeat")}</div>
+        <div class="gc-icon">${em("repeat")}</div>
         <div class="gc-main">
           <h2>Repaso</h2>
           <p>Los niveles que fallas o terminas con 1 estrella vuelven a los 1, 3 y 7 días para que no se te olviden.</p>
