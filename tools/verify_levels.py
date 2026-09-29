@@ -17,6 +17,9 @@ sys.stdout.reconfigure(encoding="utf-8")
 spec = importlib.util.spec_from_file_location("harness", ROOT / "js" / "engine" / "harness.py")
 harness = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(harness)
+spec = importlib.util.spec_from_file_location("maze", ROOT / "js" / "engine" / "maze.py")
+maze = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(maze)
 
 STEP_LIMIT = 200_000
 
@@ -209,7 +212,35 @@ def with_step_limit(fn, limit=2_000_000):
         sys.settrace(None)
 
 
+def check_maze(lv):
+    probs = []
+    maps = json.dumps(lv["maps"], ensure_ascii=False)
+    need = json.dumps(lv.get("need", []))
+    for m in lv["maps"]:
+        cells = "".join(m["filas"])
+        if cells.count("S") != 1:
+            probs.append("cada mapa necesita exactamente una S")
+        if "G" not in cells and "A" not in cells:
+            probs.append("el mapa no tiene meta ni manzanas")
+        widths = {len(f) for f in m["filas"]}
+        if len(widths) != 1:
+            probs.append(f"filas de distinto ancho: {sorted(widths)}")
+    res = json.loads(maze.correr_laberinto(lv["sol"], maps, lv.get("maxLines", 0), need))
+    for i, r in enumerate(res["mapas"], 1):
+        if not r["ok"]:
+            probs.append(f"la solución falla en el mapa {i}: {r['falla']}")
+    if res["demasiadas_lineas"]:
+        probs.append(f"la solución usa {res['lineas']} líneas (máximo {lv['maxLines']})")
+    if res["falta_funcion"]:
+        probs.append("la solución no usa lo que el nivel exige")
+    res = json.loads(with_step_limit(lambda: maze.correr_laberinto(lv["starter"], maps, lv.get("maxLines", 0), need)))
+    if all(r["ok"] for r in res["mapas"]) and not res["demasiadas_lineas"] and not res["falta_funcion"]:
+        probs.append("el código inicial ya resuelve el nivel")
+    return probs
+
+
 CHECKS = {
+    "maze": check_maze,
     "choice": check_choice,
     "input": check_input,
     "fill": check_fill,
@@ -224,6 +255,7 @@ REQUIRED = {
     "order": ["lines", "goal"],
     "bug": ["code", "line", "fix", "goal"],
     "code": ["starter", "tests", "sol", "goal"],
+    "maze": ["maps", "starter", "sol", "api"],
 }
 
 

@@ -92,7 +92,7 @@ function trackTabs(s, track) {
         const max = worlds.reduce((n, w) => n + w.levels.length * 3, 0);
         const open = worlds.some((w) => isWorldUnlocked(s, w));
         return `<button role="tab" class="track-tab${t.id === track ? " on" : ""}" aria-selected="${t.id === track}" data-track="${t.id}">
-          ${em(t.id === "algo" ? "puzzle" : "a-snake")}
+          ${em({ base: "books", maze: "a-snake", algo: "puzzle" }[t.id])}
           <span><b>${t.name}</b><small>${open ? `${icon("star")} ${trackStars(s, t.id)}/${max}` : `${icon("lock")} Bloqueada`}</small></span>
         </button>`;
       }).join("")}
@@ -112,10 +112,11 @@ function heroHtml(s, cur, track) {
        <p class="hero-type">${esc(TYPE_LABEL[cur.t])}</p>
        <button class="btn primary big" data-level="${cur.id}" data-direct="1">${icon("play")} Jugar</button>`;
   } else if (!worlds.some((w) => isWorldUnlocked(s, w))) {
+    const t = TRACKS.find((x) => x.id === track);
     const need = worldOf(LEVEL_BY_ID.get(worlds[0].needs));
     main = `<p class="eyebrow">Ruta bloqueada</p>
-       <h1 class="hero-title">Acertijos de algoritmos</h1>
-       <p class="hero-type">Búsqueda, ordenamiento, recursión, cifrados y caminos en laberintos. Se abre al vencer al jefe del ${esc(need.label)}: ${esc(need.name)}.</p>
+       <h1 class="hero-title">${esc(t.name)}</h1>
+       <p class="hero-type">${esc(t.pitch)} Se abre al vencer al jefe del ${esc(need.label)}: ${esc(need.name)}.</p>
        <button class="btn ghost big" data-track="base">${icon("map")} Ir a Fundamentos</button>`;
   } else {
     const n = worlds.reduce((k, w) => k + w.levels.length, 0);

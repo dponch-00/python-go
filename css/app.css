@@ -1015,6 +1015,49 @@ img.em.off { filter: grayscale(1); opacity: 0.35; }
 .track-tab.on { background: var(--surface); color: var(--ink); box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.18); }
 .track-tab:not(.on) .em { filter: saturate(0.4); opacity: 0.8; }
 
+.track-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 560px) {
+  .track-tab { flex-direction: column; justify-content: center; gap: 3px; padding: 8px 4px; text-align: center; min-height: 76px; }
+  .track-tab span { align-items: center; }
+  .track-tab b { font-size: 0.78rem; }
+  .track-tab small { font-size: 0.72rem; }
+}
+
+/* Laberintos de la serpiente */
+:root {
+  --mz-grass1: #CFEBC2; --mz-grass2: #C2E5B4; --mz-wall: #56657F; --mz-wall-top: #7586A2;
+  --mz-snake: #FFC933; --mz-snake-dark: #B88900; --mz-goal: rgba(47, 109, 176, 0.2);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --mz-grass1: #1E4A2F; --mz-grass2: #235236; --mz-wall: #3B4B68; --mz-wall-top: #566C94;
+    --mz-snake: #FFD24D; --mz-snake-dark: #9C7600; --mz-goal: rgba(106, 167, 236, 0.25);
+  }
+}
+:root[data-theme="dark"] {
+  --mz-grass1: #1E4A2F; --mz-grass2: #235236; --mz-wall: #3B4B68; --mz-wall-top: #566C94;
+  --mz-snake: #FFD24D; --mz-snake-dark: #9C7600; --mz-goal: rgba(106, 167, 236, 0.25);
+}
+.maze { display: flex; flex-direction: column; gap: 12px; }
+.maze-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.maze-tabs button {
+  border: 2px solid var(--line); background: var(--surface); border-radius: 10px; padding: 6px 12px;
+  font-weight: 700; font-size: 0.85rem; color: var(--ink-2);
+}
+.maze-tabs button.on { border-color: var(--accent); color: var(--accent); background: var(--accent-2); }
+.maze-stage {
+  display: flex; flex-direction: column; align-items: center; gap: 10px; overflow-x: auto;
+  padding: 12px; border-radius: 18px; background: var(--mz-grass2);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+.maze-canvas { display: block; max-width: none; border-radius: 10px; }
+.maze-msg { align-self: stretch; display: flex; gap: 6px; align-items: center; padding: 9px 12px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; }
+.maze-msg.good { background: var(--good-bg); color: var(--good); }
+.maze-msg.bad { background: var(--bad-bg); color: var(--bad); }
+.maze-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.api-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.api-chips .chip-code { font-size: calc(var(--code-size) - 1px); padding: 8px 12px; }
+
 /* Editor CodeMirror */
 .cm-host { display: flex; flex-direction: column; }
 .cm-mount { min-height: 120px; }

@@ -1,7 +1,7 @@
 // Reglas de puntuación, niveles de jugador y rangos.
 
 // Tiempo «par» por tipo de acertijo (segundos). Terminar antes da bono de velocidad.
-export const PAR = { choice: 20, input: 25, fill: 30, order: 45, bug: 30, code: 240 };
+export const PAR = { choice: 20, input: 25, fill: 30, order: 45, bug: 30, code: 240, maze: 150 };
 
 export const HINT_COST = 10;
 export const START_GEMS = 50;
@@ -9,7 +9,7 @@ export const HEARTS = 3;
 export const REVEAL_AFTER = 3; // fallos en un laboratorio antes de ofrecer la solución
 
 export function baseFor(lv) {
-  return (50 + lv.world * 10) * (lv.boss ? 2 : 1);
+  return (50 + (lv.tier || lv.world) * 10) * (lv.boss ? 2 : 1);
 }
 
 export function starsFor(lv, { mistakes, hints, revealed }) {
@@ -25,7 +25,7 @@ export function scoreRun(lv, { mistakes, hints, seconds, combo, revealed }) {
   const perfect = stars === 3;
   const base = baseFor(lv);
   const precision = perfect ? Math.round(base * 0.5) : 0;
-  const par = PAR[lv.t] * (1 + lv.world * 0.05);
+  const par = PAR[lv.t] * (1 + (lv.tier || lv.world) * 0.05);
   const speed = stars >= 2 && seconds < par ? Math.round(base * 0.5 * (1 - seconds / par)) : 0;
   const newCombo = perfect ? combo + 1 : 0;
   const mult = perfect ? 1 + 0.1 * Math.min(newCombo - 1, 5) : 1;

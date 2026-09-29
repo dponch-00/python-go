@@ -1,38 +1,34 @@
 # Python GO — estado del proyecto
 
 Juego de acertijos por niveles para aprender Python. PWA estática (HTML/CSS/JS sin frameworks)
-para **GitHub Pages**; se instala en el celular, funciona sin conexión y ejecuta Python real con
-**Pyodide 314.0.7** (CPython 3.14) en un Web Worker que solo se descarga al abrir un laboratorio o la consola.
+publicada en **GitHub Pages**; se instala en el celular, funciona sin conexión y ejecuta Python real con
+**Pyodide 314.0.7** (CPython 3.14) en un Web Worker que solo se descarga al abrir un laboratorio,
+un laberinto o la consola.
 
-## Versión 1.0.0 — completa (2026-09-29)
+- Repo: https://github.com/dponch-00/python-go (rama `main`, Pages desde `/ (root)`)
+- Juego: https://dponch-00.github.io/python-go/
 
-- 100 niveles en 10 mundos con 6 tipos de acertijo (17 laboratorios de código real).
-- Contrarreloj, Reto diario, Repaso espaciado, Consola libre.
-- Puntos, estrellas, combos, XP y rangos, racha con protector, meta diaria, 26 logros, tienda con temas.
-- Varios jugadores por dispositivo, ranking local, copia de seguridad (código o archivo).
-- Tema claro/oscuro, diseño para celular y PC, instalable, sin conexión y con aviso de nueva versión.
+## Versión 1.1.0 (2026-09-29)
+
+- **177 niveles en 3 rutas:** Fundamentos (100), Laberintos de la serpiente (17) y Algoritmos (60).
+- **Laberintos:** tablero animado en canvas; el simulador (`js/engine/maze.py`) corre el código del
+  jugador en Python y devuelve una traza que se anima. Cada nivel se prueba en varios mapas.
+- **Interfaz 1.1:** íconos 3D Fluent Emoji (MIT), tipografías locales, editor CodeMirror 6 con
+  autocompletado (empaquetado en `js/vendor/`), transiciones entre pantallas y pestañas de rutas en el mapa.
+- Contrarreloj, Reto diario, Repaso espaciado, Consola, 28 logros, tienda, varios jugadores, copia de seguridad.
 
 ## Verificación
 
 | Prueba | Comando | Resultado |
 |---|---|---|
-| Niveles contra CPython (respuestas, ambigüedades, laboratorios) | `python tools/verify_levels.py` | 100/100 |
+| Niveles contra CPython (respuestas, ambigüedades, laboratorios, laberintos) | `python tools/verify_levels.py` | 177/177 |
 | Generador del Contrarreloj contra CPython | `node tools/verify-arcade.mjs` | 4980/4980 |
-| Los 100 niveles jugados desde la interfaz (laboratorios con Pyodide) | `tools/prueba-navegador.js` | 100/100 |
+| Todos los niveles jugados desde la interfaz con Pyodide | `tools/prueba-navegador.js` | 177/177 |
 
-También se probó en el navegador: errores de Python explicados en español con la línea marcada,
-bucle infinito cortado a los 8 s sin congelar la app, Contrarreloj y Reto diario completos,
-precarga sin conexión (Pyodide y tipografías en caché) y el ciclo de actualización del service worker.
+## Pendiente / ideas
 
-## Publicado
-
-- Repo: https://github.com/dponch-00/python-go (rama `main`, GitHub Pages desde `/ (root)`).
-- Juego: https://dponch-00.github.io/python-go/ — comprobado el 2026-09-29: carga, service worker activo
-  y Python 3.14 ejecutándose desde el sitio publicado.
-- Para publicar cambios: `node tools/update-sw.mjs`, commit y push (Pages se actualiza en 1–2 minutos).
-
-## Pendiente
-
-- Probarlo instalado en un celular real (Android/iPhone).
-- Ideas futuras: ranking global en línea (requiere un servicio como Supabase o Firebase), más mundos
-  (archivos, módulos, `collections`, pruebas con `assert`), modo para dos jugadores.
+- Probar la versión 1.1 instalada en un celular real.
+- Ranking global en línea (requiere un servicio como Supabase o Firebase).
+- Más contenido: módulos (`random`, `datetime`, `collections`), archivos, más laberintos (sensores de
+  manzana cercana, laberintos con ciclos que requieren memoria de casillas visitadas).
+- Ejecución paso a paso que muestre las variables (tipo Python Tutor).

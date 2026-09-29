@@ -2,7 +2,8 @@
 import { LEVEL_BY_ID, TYPE_LABEL, WORLDS, TRACKS } from "../../data/worlds.js";
 import { scoreRun, HEARTS, HINT_COST, REVEAL_AFTER } from "../../engine/scoring.js";
 import { applyLevel, applyFail, recordAnswer, spendHint, isLevelUnlocked, nextLevel, worldOf } from "../../engine/game.js";
-import { ensurePython, runPython, onPythonStatus, pythonStatus, explainError } from "../../engine/python.js";
+import { ensurePython, runPython, runMaze, onPythonStatus, pythonStatus, explainError } from "../../engine/python.js";
+import { MazeView } from "../maze.js";
 import { esc, md, fmt, shuffle, toast, countUp } from "../dom.js";
 import { icon } from "../icons.js";
 import { em } from "../emoji.js";
@@ -306,7 +307,7 @@ export function levelScreen(root, params, app) {
     return;
   }
   const w = worldOf(lv);
-  const isLab = lv.t === "code";
+  const isLab = lv.t === "code" || lv.t === "maze";
   const firstTime = !s.levels[lv.id];
   let hearts = HEARTS, mistakes = 0, hints = 0, revealed = false, finished = false;
   const cleanups = [];
@@ -380,7 +381,194 @@ export function levelScreen(root, params, app) {
   else if (lv.t === "fill") ctl = fillPuzzle(box, lv, changed);
   else if (lv.t === "order") ctl = orderPuzzle(box, lv, changed);
   else if (lv.t === "bug") ctl = bugPuzzle(box, lv, changed);
+  else if (lv.t === "maze") ctl = mazePuzzle();
   else ctl = labPuzzle();
+
+
+  // ---------- Laberinto de la serpiente ----------
+  function mazePuzzle() {
+    const maps = lv.maps;
+    const ACCIONES = ["avanzar", "girar_izquierda", "girar_derecha", "comer"];
+    box.innerHTML = `
+      <div class="maze">
+        ${maps.length > 1 ? `<div class="maze-tabs" role="tablist" aria-label="Pruebas">
+          ${maps.map((_, i) => `<button role="tab" class="${i ? "" : "on"}" aria-selected="${!i}" data-map="${i}">Prueba ${i + 1}</button>`).join("")}
+        </div>` : ""}
+        <div class="maze-stage">
+          <canvas class="maze-canvas" role="img" aria-label="Laberinto"></canvas>
+          <div class="maze-msg" hidden></div>
+        </div>
+        <div class="maze-bar">
+          <button class="btn ghost small" data-x="mrun">${icon("play")} Probar aquí</button>
+          <button class="btn ghost small" data-x="mspeed" aria-label="Velocidad">1×</button>
+          <button class="btn ghost small" data-x="reset" aria-label="Restaurar el código inicial">${icon("refresh")}</button>
+          <span class="py-status" aria-live="polite"></span>
+        </div>
+        ${lv.maxLines ? `<p class="goal">${icon("target")} Usa como máximo ${lv.maxLines} líneas de código.</p>` : ""}
+        <div class="api-chips" role="group" aria-label="Órdenes: toca para escribirlas">
+          ${lv.api.map((f) => `<button class="chip-code" data-api="${f}">${highlight(f + "()")}</button>`).join("")}
+        </div>
+        <div class="ed-host"></div>
+        <div class="out" hidden></div>
+      </div>`;
+    const view = new MazeView(box.querySelector(".maze-canvas"));
+    let current = 0;
+    view.setMap(maps[0]);
+    const onResize = () => view.resize();
+    window.addEventListener("resize", onResize);
+    cleanups.push(() => {
+      window.removeEventListener("resize", onResize);
+      view.stop();
+    });
+
+    const draft = loadDraft(s, lv);
+    const edHost = box.querySelector(".ed-host");
+    const edReady = createCodeEditor(edHost, {
+      value: draft ?? lv.starter + "\n",
+      onChange: (v) => saveDraft(s, lv, v),
+      onRun: () => tryHere(),
+      label: "Programa de la serpiente",
+    }).then((ed) => (edHost.editor = ed));
+
+    const statusEl = box.querySelector(".py-status");
+    const msgEl = box.querySelector(".maze-msg");
+    const outEl = box.querySelector(".out");
+    const paintStatus = (st) => {
+      statusEl.className = `py-status ${st}`;
+      statusEl.innerHTML =
+        st === "loading" ? `<span class="spin"></span> Preparando Python…`
+        : st === "error" ? `No se pudo cargar Python. <button class="link" data-x="retry-py">Reintentar</button>`
+        : "";
+    };
+    cleanups.push(onPythonStatus(paintStatus));
+    paintStatus(pythonStatus());
+    ensurePython().catch(() => {});
+
+    function selectMap(i) {
+      current = i;
+      box.querySelectorAll("[data-map]").forEach((b) => {
+        b.classList.toggle("on", +b.dataset.map === i);
+        b.setAttribute("aria-selected", +b.dataset.map === i);
+      });
+      msgEl.hidden = true;
+      view.setMap(maps[i]);
+    }
+
+    function say(kind, html) {
+      msgEl.className = `maze-msg ${kind}`;
+      msgEl.innerHTML = html;
+      msgEl.hidden = false;
+    }
+
+    function showOut(r) {
+      if (r?.out) {
+        outEl.hidden = false;
+        outEl.innerHTML = `<p class="out-cap">Salida</p><pre class="out-text">${esc(r.out.replace(/\n$/, ""))}</pre>`;
+      } else outEl.hidden = true;
+    }
+
+    // Ejecuta en el mapa visible, sin penalización.
+    async function tryHere() {
+      sfx.tap();
+      const ed = await edReady;
+      msgEl.hidden = true;
+      let res;
+      try {
+        res = await runMaze(ed.value, [maps[current]], { maxLines: 0 });
+      } catch {
+        return paintStatus("error");
+      }
+      if (res.timeout) return say("bad", "Tu programa no termina: ¿hay un bucle infinito?");
+      const r = res.mapas[0];
+      ed.markLine(r.linea || 0);
+      showOut(r);
+      await view.play(r.traza);
+      if (r.ok) say("good", `${icon("check")} ¡Lo lograste en esta prueba!`);
+      else say("bad", esc(r.falla));
+    }
+
+    box.addEventListener("click", async (e) => {
+      const chip = e.target.closest("[data-api]");
+      if (chip) {
+        const f = chip.dataset.api;
+        (await edReady).insert(f + "()", ACCIONES.includes(f));
+        return;
+      }
+      const tab = e.target.closest("[data-map]");
+      if (tab) return selectMap(+tab.dataset.map);
+      const x = e.target.closest("[data-x]")?.dataset.x;
+      if (x === "mrun") tryHere();
+      if (x === "mspeed") {
+        view.speed = view.speed >= 4 ? 1 : view.speed * 2;
+        e.target.closest("[data-x]").textContent = `${view.speed}×`;
+      }
+      if (x === "reset") {
+        (await edReady).value = lv.starter + "\n";
+        view.setMap(maps[current]);
+        msgEl.hidden = outEl.hidden = true;
+      }
+      if (x === "retry-py") ensurePython().catch(() => {});
+      if (x === "reveal") {
+        revealed = true;
+        (await edReady).value = lv.sol + "\n";
+        toast("Esta es una solución posible. Estúdiala y pulsa Comprobar.", { icon: "eye" });
+        e.target.closest("[data-x]").remove();
+      }
+    });
+
+    return {
+      ready: () => true,
+      async check() {
+        checkBtn.disabled = true;
+        checkBtn.innerHTML = `<span class="spin"></span> Probando…`;
+        const ed = await edReady;
+        let res;
+        try {
+          res = await runMaze(ed.value, maps, { maxLines: lv.maxLines || 0, need: lv.need || [] });
+        } catch {
+          paintStatus("error");
+          checkBtn.disabled = false;
+          checkBtn.textContent = "Comprobar";
+          return { ok: null };
+        }
+        checkBtn.textContent = "Comprobar";
+        if (res.timeout) {
+          checkBtn.disabled = false;
+          say("bad", "Tu programa no termina: ¿hay un bucle infinito?");
+          return { ok: false };
+        }
+        const bad = res.mapas.findIndex((r) => !r.ok);
+        const shown = bad >= 0 ? bad : current;
+        if (shown !== current) selectMap(shown);
+        const r = res.mapas[shown];
+        ed.markLine(r.linea || 0);
+        showOut(r);
+        await view.play(r.traza);
+        checkBtn.disabled = false;
+        if (bad >= 0) {
+          say("bad", `${maps.length > 1 ? `<b>Prueba ${bad + 1}:</b> ` : ""}${esc(r.falla)}`);
+          return { ok: false };
+        }
+        if (res.demasiadas_lineas) {
+          say("bad", `Funciona, pero usaste ${res.lineas} líneas. El reto pide ${lv.maxLines} como máximo: busca lo que se repite.`);
+          return { ok: false };
+        }
+        if (res.falta_funcion) {
+          say("bad", "Funciona, pero este reto pide crear al menos una función con <code class=\"ic\">def</code>.");
+          return { ok: false };
+        }
+        say("good", `${icon("check")} ¡Funciona en ${maps.length > 1 ? `las ${maps.length} pruebas` : "el laberinto"}!`);
+        return { ok: true };
+      },
+      reset() {},
+      reveal() {},
+      afterFail() {
+        if (mistakes >= REVEAL_AFTER && !revealed && !box.querySelector('[data-x="reveal"]')) {
+          box.querySelector(".maze-bar").insertAdjacentHTML("beforeend", `<button class="btn ghost small" data-x="reveal">${icon("eye")} Ver solución</button>`);
+        }
+      },
+    };
+  }
 
   // ---------- Laboratorio (código real) ----------
   function labPuzzle() {
@@ -424,7 +612,7 @@ export function levelScreen(root, params, app) {
     function showOut(res) {
       outEl.hidden = false;
       if (res.timeout) {
-        outEl.innerHTML = `<p class="out-err"><b>Tiempo agotado.</b> Tu código tardó demasiado: ¿hay un bucle infinito?</p>`;
+        outEl.innerHTML = `<p class="out-err"><b>Tiempo agotado.</b> Tu código tardó demasiado: ¿hay un bucle infinito o es una solución muy lenta?</p>`;
         return;
       }
       const out = res.out ? `<pre class="out-text">${esc(res.out.replace(/\n$/, ""))}</pre>` : `<p class="muted small">(sin salida)</p>`;

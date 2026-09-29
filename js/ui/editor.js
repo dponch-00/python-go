@@ -109,6 +109,13 @@ export function createEditor(host, { value = "", onChange = () => {}, onRun = nu
       onChange(v);
     },
     focus: () => ta.focus(),
+    insert(text, newline = false) {
+      insert(text);
+      if (newline) {
+        const { text: line } = currentLine();
+        insert("\n" + line.match(/^ */)[0]);
+      }
+    },
     markLine(n) {
       [...gutter.children].forEach((s, i) => s.classList.toggle("err", i + 1 === n));
     },

@@ -37,7 +37,7 @@ async function solve(app, lv) {
   } else if (lv.t === "order") {
     for (let k = 0; k < lv.lines.length; k++) q(`.pool .oline[data-i="${k}"]`).click();
   } else if (lv.t === "bug") q(`.bl[data-n="${lv.line}"]`).click();
-  else if (lv.t === "code") {
+  else if (lv.t === "code" || lv.t === "maze") {
     if (!(await until(() => q(".py-status.ready"), 30000))) return "Python no cargó";
     const host = q(".ed-host");
     if (!(await until(() => host.editor, 15000))) return "el editor no cargó";
@@ -60,6 +60,7 @@ async function solve(app, lv) {
 export async function correr({ detenerEnFallo = true } = {}) {
   if (running) return "ya está corriendo";
   running = true;
+  window.__pygoTurbo = true; // animaciones instantáneas
   const { app } = await import(new URL("../js/main.js", import.meta.url));
   const { LEVELS } = await import(new URL("../js/data/worlds.js", import.meta.url));
   for (const lv of LEVELS) {

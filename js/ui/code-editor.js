@@ -137,6 +137,12 @@ export async function createCodeEditor(host, { value = "", onChange = () => {}, 
       onChange(v);
     },
     focus: () => view.focus(),
+    // Inserta texto en el cursor; con `newline` agrega un salto con la sangría correcta.
+    insert(text, newline = false) {
+      view.dispatch(view.state.replaceSelection(text));
+      if (newline) cm.insertNewlineAndIndent(view);
+      view.focus();
+    },
     markLine(n) {
       view.dispatch({ effects: setErr.of(n || 0) });
     },

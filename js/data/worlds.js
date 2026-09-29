@@ -1,23 +1,27 @@
 import { WORLDS_1 } from "./levels-1.js";
 import { WORLDS_2 } from "./levels-2.js";
 import { ALGO_WORLDS } from "./algo.js";
+import { MAZE_WORLDS } from "./mazes.js";
 
 // Rutas del mapa. Cada mundo pertenece a una.
 export const TRACKS = [
   { id: "base", name: "Fundamentos", desc: "Python desde cero" },
-  { id: "algo", name: "Algoritmos", desc: "Acertijos clásicos de programación" },
+  { id: "maze", name: "Laberintos", desc: "Programa a la serpiente",
+    pitch: "Escribe el programa que guía a la serpiente: bucles, condiciones y la regla de la mano derecha." },
+  { id: "algo", name: "Algoritmos", desc: "Acertijos clásicos de programación",
+    pitch: "Búsqueda, ordenamiento, recursión, cifrados y caminos en laberintos." },
 ];
 
 for (const w of [...WORLDS_1, ...WORLDS_2]) {
   w.track = "base";
   w.short = String(w.id);
 }
-export const WORLDS = [...WORLDS_1, ...WORLDS_2, ...ALGO_WORLDS];
+export const WORLDS = [...WORLDS_1, ...WORLDS_2, ...MAZE_WORLDS, ...ALGO_WORLDS];
 
 // Nombre visible: «Mundo 3» o «Algoritmos 2».
 for (const w of WORLDS) {
   const i = WORLDS.filter((x) => x.track === w.track).indexOf(w) + 1;
-  w.label = w.track === "algo" ? `Algoritmos ${i}` : `Mundo ${w.id}`;
+  w.label = w.track === "algo" ? `Algoritmos ${i}` : w.track === "maze" ? `Laberintos ${i}` : `Mundo ${w.id}`;
 }
 
 export const worldsOf = (track) => WORLDS.filter((w) => w.track === track);
@@ -31,6 +35,7 @@ for (const w of WORLDS) {
   w.levels.forEach((lv, i) => {
     lv.world = w.id;
     lv.track = w.track;
+    lv.tier = w.tier || w.id; // dificultad para la puntuación
     lv.index = i;
     lv.num = i + 1;
     LEVELS.push(lv);
@@ -48,4 +53,5 @@ export const TYPE_LABEL = {
   order: "Ordena el código",
   bug: "Caza el error",
   code: "Laboratorio",
+  maze: "Laberinto",
 };

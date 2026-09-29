@@ -71,8 +71,7 @@ export function ensurePython() {
   return readyP;
 }
 
-// Ejecuta código. Devuelve { out, err, tests } o { timeout: true } si tardó demasiado.
-export async function runPython(src, { pre = "", tests = [], timeout = TIMEOUT_MS } = {}) {
+async function send(msg, timeout) {
   await ensurePython();
   const id = ++seq;
   return new Promise((resolve, reject) => {
@@ -83,8 +82,18 @@ export async function runPython(src, { pre = "", tests = [], timeout = TIMEOUT_M
       resolve({ timeout: true });
     }, timeout);
     waiting.set(id, { resolve, reject, timer });
-    worker.postMessage({ type: "run", id, src, pre, tests });
+    worker.postMessage({ ...msg, id });
   });
+}
+
+// Ejecuta código. Devuelve { out, err, tests } o { timeout: true } si tardó demasiado.
+export function runPython(src, { pre = "", tests = [], timeout = TIMEOUT_MS } = {}) {
+  return send({ type: "run", src, pre, tests }, timeout);
+}
+
+// Ejecuta el programa de la serpiente en cada mapa. Devuelve { mapas: [...], lineas, demasiadas_lineas }.
+export function runMaze(src, maps, { maxLines = 0, need = [], timeout = TIMEOUT_MS } = {}) {
+  return send({ type: "maze", src, maps, maxLines, need }, timeout);
 }
 
 // Traducción amable de los errores más comunes.
