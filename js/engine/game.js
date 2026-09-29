@@ -1,21 +1,35 @@
 // Lógica de progreso: desbloqueos, estrellas, rachas, repasos, logros y recompensas.
-import { WORLDS, LEVELS, LEVEL_BY_ID, MAX_STARS } from "../data/worlds.js";
+import { WORLDS, LEVELS, LEVEL_BY_ID, WORLD_BY_ID, MAX_STARS, worldsOf } from "../data/worlds.js";
 import { levelFromXp, HINT_COST } from "./scoring.js";
 import { dayKey, dayDiff, addDays } from "./store.js";
 
 // ---------- Consultas ----------
 export const rec = (s, id) => s.levels[id];
 export const isDone = (s, id) => !!s.levels[id]?.done;
+const bossId = (w) => w.levels[w.levels.length - 1].id;
 
 export function worldOf(lv) {
-  return WORLDS.find((w) => w.id === lv.world);
+  return WORLD_BY_ID.get(lv.world);
 }
 
+// Un mundo se abre al vencer al jefe anterior de su ruta y, si lo pide, un nivel de otra ruta.
 export function isWorldUnlocked(s, w) {
-  const i = WORLDS.indexOf(w);
-  if (i <= 0) return true;
-  const prev = WORLDS[i - 1];
-  return isDone(s, prev.levels[prev.levels.length - 1].id);
+  if (w.needs && !isDone(s, w.needs)) return false;
+  const list = worldsOf(w.track);
+  const i = list.indexOf(w);
+  return i <= 0 || isDone(s, bossId(list[i - 1]));
+}
+
+// Qué falta para abrir un mundo, en palabras.
+export function lockReason(s, w) {
+  const list = worldsOf(w.track);
+  const prev = list[list.indexOf(w) - 1];
+  if (prev && !isDone(s, bossId(prev))) return `Vence al jefe de ${prev.label} para entrar.`;
+  if (w.needs && !isDone(s, w.needs)) {
+    const nw = worldOf(LEVEL_BY_ID.get(w.needs));
+    return `Se abre al vencer al jefe del ${nw.label}: ${nw.name}.`;
+  }
+  return "";
 }
 
 export function isLevelUnlocked(s, lv) {
@@ -24,14 +38,16 @@ export function isLevelUnlocked(s, lv) {
   return lv.index === 0 || isDone(s, w.levels[lv.index - 1].id);
 }
 
-export function currentLevel(s) {
-  return LEVELS.find((lv) => !isDone(s, lv.id) && isLevelUnlocked(s, lv)) || null;
+export function currentLevel(s, track = "base") {
+  return LEVELS.find((lv) => lv.track === track && !isDone(s, lv.id) && isLevelUnlocked(s, lv)) || null;
 }
 
 export function nextLevel(lv) {
-  const i = LEVELS.indexOf(lv);
-  return LEVELS[i + 1] || null;
+  const list = LEVELS.filter((x) => x.track === lv.track);
+  return list[list.indexOf(lv) + 1] || null;
 }
+
+export const trackStars = (s, track) => worldsOf(track).reduce((n, w) => n + worldStars(s, w), 0);
 
 export const worldStars = (s, w) => w.levels.reduce((n, lv) => n + (s.levels[lv.id]?.stars || 0), 0);
 export const worldDone = (s, w) => w.levels.every((lv) => isDone(s, lv.id));
@@ -128,6 +144,8 @@ export const ACHIEVEMENTS = [
   { id: "boss1", icon: "crown", name: "Matajefes", desc: "Derrota a tu primer jefe", gems: 25, test: (s) => bossesDone(s) >= 1 },
   { id: "worlds3", icon: "map", name: "Trotamundos", desc: "Completa 3 mundos", gems: 50, test: (s) => worldsDone(s) >= 3 },
   { id: "bossAll", icon: "trophy", name: "Conquista total", desc: `Derrota a los ${WORLDS.length} jefes`, gems: 200, test: (s) => bossesDone(s) >= WORLDS.length },
+  { id: "algo1", icon: "brain", name: "Pensamiento algorítmico", desc: "Derrota a tu primer jefe de Algoritmos", gems: 40, test: (s) => worldsOf("algo").some((w) => isDone(s, bossId(w))) },
+  { id: "algoAll", icon: "brain", name: "Gran algoritmista", desc: "Derrota a todos los jefes de Algoritmos", gems: 250, test: (s) => worldsOf("algo").every((w) => isDone(s, bossId(w))) },
   { id: "stars50", icon: "star", name: "Constelación", desc: "Reúne 50 estrellas", gems: 30, test: (s) => totalStars(s) >= 50 },
   { id: "stars150", icon: "star", name: "Galaxia", desc: "Reúne 150 estrellas", gems: 80, test: (s) => totalStars(s) >= 150 },
   { id: "starsAll", icon: "trophy", name: "Universo perfecto", desc: `Consigue las ${MAX_STARS} estrellas`, gems: 300, test: (s) => totalStars(s) >= MAX_STARS },

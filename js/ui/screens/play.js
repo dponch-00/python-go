@@ -1,5 +1,5 @@
 // Pantalla de nivel (los 6 tipos de acertijo) y pantalla de resultado.
-import { LEVEL_BY_ID, TYPE_LABEL, WORLDS } from "../../data/worlds.js";
+import { LEVEL_BY_ID, TYPE_LABEL, WORLDS, TRACKS } from "../../data/worlds.js";
 import { scoreRun, HEARTS, HINT_COST, REVEAL_AFTER } from "../../engine/scoring.js";
 import { applyLevel, applyFail, recordAnswer, spendHint, isLevelUnlocked, nextLevel, worldOf } from "../../engine/game.js";
 import { ensurePython, runPython, onPythonStatus, pythonStatus, explainError } from "../../engine/python.js";
@@ -325,7 +325,7 @@ export function levelScreen(root, params, app) {
       <header class="play-top">
         <button class="icon-btn" data-x="close" aria-label="Salir del nivel">${icon("close")}</button>
         <div class="play-title">
-          <span class="eyebrow">${mode === "review" ? "Repaso · " : ""}Mundo ${lv.world} · Nivel ${lv.num}${lv.boss ? " · Jefe" : ""}</span>
+          <span class="eyebrow">${mode === "review" ? "Repaso · " : ""}${esc(w.label)} · Nivel ${lv.num}${lv.boss ? " · Jefe" : ""}</span>
           <b>${esc(lv.title)}</b>
         </div>
         <div class="play-meta">
@@ -629,8 +629,12 @@ export function resultScreen(root, _params, app) {
   const { lv, run, sum, mode, queue } = t;
   const w = worldOf(lv);
   const next = mode === "review" ? null : nextLevel(lv);
-  const worldCleared = lv.boss;
-  const title = lv.boss ? (lv.world === WORLDS.length ? "¡Conquistaste Python GO!" : "¡Jefe derrotado!") : run.stars === 3 ? "¡Perfecto!" : "¡Nivel superado!";
+  const trackName = TRACKS.find((x) => x.id === lv.track)?.name;
+  const title = lv.boss ? (!nextLevel(lv) ? `¡Completaste ${trackName}!` : "¡Jefe derrotado!") : run.stars === 3 ? "¡Perfecto!" : "¡Nivel superado!";
+  // Mundos que se abren con esta victoria: el siguiente de la ruta y los que pedían este nivel.
+  const unlocks = sum.firstClear && lv.boss
+    ? WORLDS.filter((x) => x.needs === lv.id || (next && x.id === next.world))
+    : [];
   const rows = [
     ["Base", `+${run.base}`],
     run.precision ? ["Sin errores", `+${run.precision}`] : null,
@@ -641,7 +645,7 @@ export function resultScreen(root, _params, app) {
   root.innerHTML = `
     <div class="result" style="--h:${w.hue}">
       <div class="res-card card">
-        <p class="eyebrow">${mode === "review" ? "Repaso · " : ""}Mundo ${lv.world} · Nivel ${lv.num}</p>
+        <p class="eyebrow">${mode === "review" ? "Repaso · " : ""}${esc(w.label)} · Nivel ${lv.num}</p>
         ${lv.boss ? em("trophy", "res-trophy") : ""}
         <h1 class="res-title">${title}</h1>
         <div class="res-stars" aria-label="${run.stars} de 3 estrellas">
@@ -657,7 +661,7 @@ export function resultScreen(root, _params, app) {
           ${sum.gems ? `<span class="reward gem">${em("gem")} +${sum.gems}</span>` : ""}
           <span class="reward time">${icon("clock")} ${Math.round(run.seconds ?? 0) || Math.round(sum.record.time)} s</span>
         </div>
-        ${worldCleared && next ? `<p class="unlock">${em("map")} Desbloqueaste el <b>Mundo ${next.world}: ${esc(worldOf(next).name)}</b></p>` : ""}
+        ${unlocks.map((x) => `<p class="unlock">${em(x.art || `w${x.id}`)} Se abrió <b>${esc(x.label)}: ${esc(x.name)}</b></p>`).join("")}
       </div>
       <div class="res-actions">
         <button class="btn ghost" data-x="retry">${icon("refresh")} Repetir</button>

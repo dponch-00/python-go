@@ -87,7 +87,7 @@ export function meScreen(main, _params, app) {
           ${WORLDS.map((w) => {
             const n = worldStars(s, w), tot = w.levels.length * 3, open = isWorldUnlocked(s, w);
             return `<li style="--h:${w.hue}" class="${open ? "" : "locked"}">
-              <span class="wl-n">${w.id}</span>
+              <span class="wl-n">${w.short}</span>
               <span class="wl-name">${esc(w.name)}</span>
               <span class="wl-bar"><span style="width:${(n / tot) * 100}%"></span></span>
               <span class="wl-s">${open ? `${n}/${tot}` : icon("lock")}</span>

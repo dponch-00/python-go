@@ -26,4 +26,5 @@ export const ACH_EM = {
   nohint: "brain", comeback: "muscle", streak3: "fire", streak7: "fire", streak30: "fire",
   goal7: "target", arcade10: "stopwatch", arcade25: "hourglass", daily7: "calendar", review10: "books",
   night: "moon", early: "sunrise", console: "keyboard", lvl10: "grad", rich: "gem",
+  algo1: "puzzle", algoAll: "abacus",
 };

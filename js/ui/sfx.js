@@ -37,7 +37,8 @@ function tone(freq, dur, { type = "sine", gain = 0.12, delay = 0, slide = 0 } = 
 }
 
 export function buzz(pattern) {
-  if (vibeOn) navigator.vibrate?.(pattern);
+  // El navegador solo permite vibrar después de que la persona tocó la pantalla.
+  if (vibeOn && navigator.userActivation?.hasBeenActive !== false) navigator.vibrate?.(pattern);
 }
 
 export const sfx = {

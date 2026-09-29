@@ -7,4 +7,4 @@ echo   Python GO corriendo en http://localhost:%PORT%
 echo   Cierra esta ventana para detenerlo.
 echo.
 start "" "http://localhost:%PORT%"
-python -m http.server %PORT% --bind 127.0.0.1
+python tools\serve.py %PORT%

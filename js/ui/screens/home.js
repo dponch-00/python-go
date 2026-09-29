@@ -1,8 +1,9 @@
 // Mapa de mundos: un camino con forma de serpiente que atraviesa los niveles.
-import { WORLDS, TYPE_LABEL } from "../../data/worlds.js";
+// Dos rutas: Fundamentos y Algoritmos.
+import { TRACKS, TYPE_LABEL, LEVEL_BY_ID, worldsOf } from "../../data/worlds.js";
 import {
-  isWorldUnlocked, isLevelUnlocked, isDone, currentLevel, worldStars,
-  todayXp, dueReviews, canDoDaily,
+  isWorldUnlocked, isLevelUnlocked, isDone, currentLevel, worldStars, worldOf, lockReason,
+  trackStars, todayXp, dueReviews, canDoDaily,
 } from "../../engine/game.js";
 import { esc, fmt, modal } from "../dom.js";
 import { icon, snakeHead } from "../icons.js";
@@ -27,7 +28,7 @@ function starsHtml(n, total = 3) {
   return `<span class="mini-stars" aria-hidden="true">${Array.from({ length: total }, (_, i) => icon("star", i < n ? "on" : "")).join("")}</span>`;
 }
 
-function worldHtml(w, s, W, cur) {
+function worldHtml(w, s, W, cur, first) {
   const unlocked = isWorldUnlocked(s, w);
   const stars = worldStars(s, w);
   const n = w.levels.length;
@@ -54,24 +55,24 @@ function worldHtml(w, s, W, cur) {
           data-level="${lv.id}" ${open ? "" : "disabled"} aria-label="${esc(label)}">
           <span class="disc">${face}</span>
           ${r?.done ? starsHtml(r.stars) : ""}
-          ${isCur ? `<span class="bubble">${i === 0 && w.id === 1 ? "¡Empieza aquí!" : "¡Sigue aquí!"}</span>` : ""}
+          ${isCur ? `<span class="bubble">${i === 0 && first ? "¡Empieza aquí!" : "¡Sigue aquí!"}</span>` : ""}
         </button>`;
     })
     .join("");
 
   return `
-    <section class="world ${unlocked ? "" : "locked"}" style="--h:${w.hue}" aria-label="Mundo ${w.id}: ${esc(w.name)}">
+    <section class="world ${unlocked ? "" : "locked"}" style="--h:${w.hue}" aria-label="${esc(w.label)}: ${esc(w.name)}">
       <header class="world-head">
         <div class="w-art">${em(w.art || `w${w.id}`)}</div>
         <div class="w-text">
-          <p class="w-num">Mundo ${w.id}</p>
+          <p class="w-num">${esc(w.label)}</p>
           <h2>${esc(w.name)}</h2>
           <p class="w-topic">${esc(w.topic)}</p>
         </div>
         <div class="w-score">
           ${unlocked ? `<span class="w-stars">${icon("star")} ${stars}<small>/${n * 3}</small></span>` : `<span class="w-lock">${icon("lock")}</span>`}
         </div>
-        ${unlocked ? "" : `<p class="w-msg">Vence al jefe del Mundo ${w.id - 1} para entrar.</p>`}
+        ${unlocked ? "" : `<p class="w-msg">${esc(lockReason(s, w))}</p>`}
       </header>
       <div class="path" style="height:${H}px">
         <svg class="snake" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">
@@ -83,20 +84,46 @@ function worldHtml(w, s, W, cur) {
     </section>`;
 }
 
-function heroHtml(s, cur) {
+function trackTabs(s, track) {
+  return `
+    <div class="track-tabs" role="tablist" aria-label="Rutas">
+      ${TRACKS.map((t) => {
+        const worlds = worldsOf(t.id);
+        const max = worlds.reduce((n, w) => n + w.levels.length * 3, 0);
+        const open = worlds.some((w) => isWorldUnlocked(s, w));
+        return `<button role="tab" class="track-tab${t.id === track ? " on" : ""}" aria-selected="${t.id === track}" data-track="${t.id}">
+          ${em(t.id === "algo" ? "puzzle" : "a-snake")}
+          <span><b>${t.name}</b><small>${open ? `${icon("star")} ${trackStars(s, t.id)}/${max}` : `${icon("lock")} Bloqueada`}</small></span>
+        </button>`;
+      }).join("")}
+    </div>`;
+}
+
+function heroHtml(s, cur, track) {
   const goal = s.settings.goal;
   const xp = todayXp(s);
   const pct = Math.min(1, xp / goal);
   const due = dueReviews(s).length;
-  const main = cur
-    ? `<p class="eyebrow">Mundo ${cur.world} · Nivel ${cur.num}${cur.boss ? " · Jefe" : ""}</p>
+  const worlds = worldsOf(track);
+  let main;
+  if (cur) {
+    main = `<p class="eyebrow">${esc(worldOf(cur).label)} · Nivel ${cur.num}${cur.boss ? " · Jefe" : ""}</p>
        <h1 class="hero-title">${esc(cur.title)}</h1>
        <p class="hero-type">${esc(TYPE_LABEL[cur.t])}</p>
-       <button class="btn primary big" data-level="${cur.id}" data-direct="1">${icon("play")} Jugar</button>`
-    : `<p class="eyebrow">Mapa completo</p>
-       <h1 class="hero-title">¡Superaste los ${WORLDS.reduce((n, w) => n + w.levels.length, 0)} niveles!</h1>
+       <button class="btn primary big" data-level="${cur.id}" data-direct="1">${icon("play")} Jugar</button>`;
+  } else if (!worlds.some((w) => isWorldUnlocked(s, w))) {
+    const need = worldOf(LEVEL_BY_ID.get(worlds[0].needs));
+    main = `<p class="eyebrow">Ruta bloqueada</p>
+       <h1 class="hero-title">Acertijos de algoritmos</h1>
+       <p class="hero-type">Búsqueda, ordenamiento, recursión, cifrados y caminos en laberintos. Se abre al vencer al jefe del ${esc(need.label)}: ${esc(need.name)}.</p>
+       <button class="btn ghost big" data-track="base">${icon("map")} Ir a Fundamentos</button>`;
+  } else {
+    const n = worlds.reduce((k, w) => k + w.levels.length, 0);
+    main = `<p class="eyebrow">Ruta completa</p>
+       <h1 class="hero-title">¡Superaste los ${n} niveles!</h1>
        <p class="hero-type">Busca las 3 estrellas en cada nivel o reta tu récord en Contrarreloj.</p>
        <button class="btn primary big" data-act="go" data-to="arcade">${icon("clock")} Contrarreloj</button>`;
+  }
   return `
     <section class="hero card">
       <div class="hero-main">${main}</div>
@@ -129,42 +156,60 @@ function preview(lv, s, app) {
   });
 }
 
-export function mapScreen(main, _params, app) {
-  const s = app.save;
-  const cur = currentLevel(s);
+let track = "base";
+try {
+  track = sessionStorage.getItem("pygo:track") || "base";
+} catch {}
 
-  function render() {
+export function mapScreen(main, params, app) {
+  const s = app.save;
+  if (params.track) track = params.track;
+
+  function render(scroll = false) {
+    const cur = currentLevel(s, track);
     const W = Math.min(main.clientWidth || 360, 560) - 8;
+    const worlds = worldsOf(track);
     main.innerHTML = `
-      <div class="map">
-        ${heroHtml(s, cur)}
-        ${WORLDS.map((w) => worldHtml(w, s, W, cur)).join("")}
+      <div class="map" data-track="${track}">
+        ${trackTabs(s, track)}
+        ${heroHtml(s, cur, track)}
+        ${worlds.map((w, i) => worldHtml(w, s, W, cur, i === 0)).join("")}
         <p class="map-end muted">Más mundos en camino.</p>
       </div>`;
+    const node = main.querySelector(".node.cur");
+    // Solo desplaza si el nivel actual quedó fuera de la pantalla.
+    if (scroll && node) {
+      requestAnimationFrame(() => {
+        if (node.getBoundingClientRect().bottom > innerHeight - 100) node.scrollIntoView({ block: "center", behavior: "instant" });
+      });
+    }
   }
-  render();
-
-  const node = main.querySelector(".node.cur");
-  // Solo desplaza si el nivel actual quedó fuera de la pantalla.
-  if (node) {
-    requestAnimationFrame(() => {
-      if (node.getBoundingClientRect().bottom > innerHeight - 100) node.scrollIntoView({ block: "center", behavior: "instant" });
-    });
-  }
+  render(true);
 
   main.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-track]");
+    if (t) {
+      sfx.tap();
+      track = t.dataset.track;
+      try {
+        sessionStorage.setItem("pygo:track", track);
+      } catch {}
+      render();
+      window.scrollTo({ top: 0 });
+      return;
+    }
     const b = e.target.closest("[data-level]");
     if (!b || b.disabled) return;
     sfx.tap();
-    const lv = WORLDS.flatMap((w) => w.levels).find((x) => x.id === b.dataset.level);
+    const lv = LEVEL_BY_ID.get(b.dataset.level);
     if (b.dataset.direct) app.go("level", { id: lv.id });
     else preview(lv, s, app);
   });
 
-  let t;
+  let tm;
   const onResize = () => {
-    clearTimeout(t);
-    t = setTimeout(render, 150);
+    clearTimeout(tm);
+    tm = setTimeout(() => render(), 150);
   };
   window.addEventListener("resize", onResize);
   return () => window.removeEventListener("resize", onResize);

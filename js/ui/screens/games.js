@@ -1,5 +1,5 @@
 // Pestaña Juegos: Reto diario, Contrarreloj y Repaso.
-import { canDoDaily, dueReviews } from "../../engine/game.js";
+import { canDoDaily, dueReviews, worldOf } from "../../engine/game.js";
 import { DAILY_COUNT } from "../../engine/arcade.js";
 import { TYPE_LABEL } from "../../data/worlds.js";
 import { esc, fmt } from "../dom.js";
@@ -49,7 +49,7 @@ export function gamesScreen(main, _params, app) {
       ${due.length ? `
         <h2 class="section-title">Para repasar hoy</h2>
         <ul class="review-list">
-          ${due.map((lv) => `<li><span class="rv-id">${lv.world}·${lv.num}</span><span class="rv-t">${esc(lv.title)}</span><span class="rv-type">${esc(TYPE_LABEL[lv.t])}</span></li>`).join("")}
+          ${due.map((lv) => `<li><span class="rv-id">${worldOf(lv).short}·${lv.num}</span><span class="rv-t">${esc(lv.title)}</span><span class="rv-type">${esc(TYPE_LABEL[lv.t])}</span></li>`).join("")}
         </ul>` : ""}
     </div>`;
 

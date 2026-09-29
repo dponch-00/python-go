@@ -188,8 +188,11 @@ function show(route, params = {}) {
       cleanup = SCREENS[route].render(root.firstElementChild, params, app) || null;
     }
   };
-  if (!first && document.startViewTransition && !reducedMotion() && !document.hidden) document.startViewTransition(swap);
-  else swap();
+  if (!first && document.startViewTransition && !reducedMotion() && !document.hidden) {
+    // Si la transición se salta (p. ej. dos cambios seguidos), la pantalla igual se muestra.
+    const vt = document.startViewTransition(swap);
+    for (const pr of [vt.ready, vt.finished, vt.updateCallbackDone]) pr?.catch(() => {});
+  } else swap();
 }
 
 // Navegación declarativa: cualquier elemento con data-act="go" data-to="ruta".

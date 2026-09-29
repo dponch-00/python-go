@@ -1001,6 +1001,20 @@ img.em.off { filter: grayscale(1); opacity: 0.35; }
 @keyframes bob2 { 50% { transform: translateY(-6px) rotate(-2deg); } }
 @keyframes twinkle { 50% { transform: scale(0.8) rotate(12deg); opacity: 0.7; } }
 
+/* Pestañas de rutas del mapa */
+.track-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 5px; border-radius: 18px; background: var(--bg-2); }
+.track-tab {
+  display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 8px 12px; border: 0; border-radius: 14px;
+  background: transparent; color: var(--ink-2); text-align: left; transition: background 0.15s, box-shadow 0.15s;
+}
+.track-tab .em { width: 30px; height: 30px; flex: none; }
+.track-tab span { display: flex; flex-direction: column; min-width: 0; }
+.track-tab b { font: 700 0.86rem var(--f-display); color: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.track-tab small { display: inline-flex; align-items: center; gap: 3px; font-size: 0.78rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.track-tab small .i { width: 14px; height: 14px; color: var(--gold-deep); }
+.track-tab.on { background: var(--surface); color: var(--ink); box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.18); }
+.track-tab:not(.on) .em { filter: saturate(0.4); opacity: 0.8; }
+
 /* Editor CodeMirror */
 .cm-host { display: flex; flex-direction: column; }
 .cm-mount { min-height: 120px; }

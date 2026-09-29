@@ -127,15 +127,17 @@ def check_fill(lv):
 
 
 def check_order(lv):
-    head, lines, goal = lv.get("head", []), lv["lines"], lv["goal"]
-    out, err = run_limited("\n".join(head + lines))
+    head, lines, goal, tail = lv.get("head", []), lv["lines"], lv["goal"], lv.get("tail", [])
+    if len(lines) > 9:
+        return [f"{len(lines)} líneas para ordenar: usa head/tail para dejar como máximo 9"]
+    out, err = run_limited("\n".join(head + lines + tail))
     if err or norm(out) != norm(goal):
         return [f"orden correcto da {err or repr(out)} ≠ meta {goal!r}"]
     valid = set()
     for perm in itertools.permutations(lines):
         if perm in valid:
             continue
-        src = "\n".join(head + list(perm))
+        src = "\n".join(head + list(perm) + tail)
         try:
             compile(src, "<p>", "exec")
         except SyntaxError:
@@ -179,10 +181,32 @@ def check_code(lv):
     for t in res["tests"]:
         if not t["ok"]:
             probs.append(f"la solución no pasa «{t['msg']}» (obtuvo {t['got']!r})")
-    res = json.loads(harness.run(lv["starter"], pre, tests))
+    # El código inicial puede ser lento a propósito (p. ej. recursión sin memoria): se corta por pasos.
+    res = json.loads(with_step_limit(lambda: harness.run(lv["starter"], pre, tests)))
     if all(t["ok"] for t in res["tests"]):
         probs.append("el código inicial ya pasa todas las pruebas")
     return probs
+
+
+def with_step_limit(fn, limit=2_000_000):
+    steps = 0
+
+    # Solo cuenta (y corta) dentro del código del jugador; cada prueba lenta se corta por separado.
+    def tracer(frame, event, arg):
+        nonlocal steps
+        if frame.f_code.co_filename != harness.FILE:
+            return tracer
+        steps += 1
+        if steps > limit:
+            steps = 0
+            raise TooLong("demasiado lento")
+        return tracer
+
+    sys.settrace(tracer)
+    try:
+        return fn()
+    finally:
+        sys.settrace(None)
 
 
 CHECKS = {

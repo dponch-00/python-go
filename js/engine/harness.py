@@ -78,6 +78,45 @@ def _ast_calls(src, name):
     return False
 
 
+def _ast_attr_calls(src, name):
+    """¿Se llama a un método con ese nombre? (p. ej. lista.sort())"""
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return False
+    return any(
+        isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == name
+        for n in ast.walk(tree)
+    )
+
+
+def _ast_imports(src, module):
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return False
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Import) and any(a.name.split(".")[0] == module for a in n.names):
+            return True
+        if isinstance(n, ast.ImportFrom) and (n.module or "").split(".")[0] == module:
+            return True
+    return False
+
+
+def _ast_recursive(src, fname):
+    """¿La función fname se llama a sí misma dentro de su cuerpo?"""
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return False
+    for n in ast.walk(tree):
+        if isinstance(n, ast.FunctionDef) and n.name == fname:
+            for m in ast.walk(n):
+                if isinstance(m, ast.Call) and isinstance(m.func, ast.Name) and m.func.id == fname:
+                    return True
+    return False
+
+
 def _default_msg(t):
     if "ex" in t:
         return f"{t['ex']} → {t['eq']}"
@@ -109,6 +148,30 @@ def run(src, pre="", tests_json="[]"):
             r["ok"] = not _ast_calls(src, t["noCall"])
             if not r["ok"]:
                 r["got"] = f"Tu código usa {t['noCall']}()"
+            results.append(r)
+            continue
+        if "noAttr" in t:
+            r["ok"] = not _ast_attr_calls(src, t["noAttr"])
+            if not r["ok"]:
+                r["got"] = f"Tu código usa .{t['noAttr']}()"
+            results.append(r)
+            continue
+        if "noImport" in t:
+            r["ok"] = not _ast_imports(src, t["noImport"])
+            if not r["ok"]:
+                r["got"] = f"Tu código importa {t['noImport']}"
+            results.append(r)
+            continue
+        if "bans" in t:
+            r["ok"] = not _ast_uses(src, t["bans"])
+            if not r["ok"]:
+                r["got"] = "Tu código usa algo que este reto no permite"
+            results.append(r)
+            continue
+        if "recursive" in t:
+            r["ok"] = _ast_recursive(src, t["recursive"])
+            if not r["ok"]:
+                r["got"] = f"{t['recursive']} no se llama a sí misma"
             results.append(r)
             continue
 
