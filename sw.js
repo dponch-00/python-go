@@ -2,7 +2,7 @@
 // La lista ASSETS y CACHE las regenera `node tools/update-sw.mjs` (ejecútalo antes de publicar).
 
 // ASSETS:start
-const CACHE = "pygo-1.1.1-5f15bc1d";
+const CACHE = "pygo-1.1.2-210dbe9d";
 const ASSETS = [
   "./",
   "css/app.css",
@@ -169,7 +169,9 @@ async function networkFirst(req) {
 }
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
+  // `cache: "reload"` pide cada archivo al servidor. Sin esto, el navegador puede copiar versiones
+  // viejas desde su caché HTTP (GitHub Pages guarda 10 minutos) y la actualización queda a medias.
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS.map((u) => new Request(u, { cache: "reload" })))));
 });
 
 self.addEventListener("activate", (e) => {

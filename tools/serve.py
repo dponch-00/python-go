@@ -25,15 +25,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     }
 
     def end_headers(self):
-        self.send_header("Cache-Control", "no-cache")
+        # --pages imita a GitHub Pages (cada archivo se guarda 10 minutos en la caché del navegador).
+        self.send_header("Cache-Control", "max-age=600" if PAGES else "no-cache")
         super().end_headers()
 
     def log_message(self, fmt, *args):
         pass  # silencioso
 
 
+PAGES = "--pages" in sys.argv
+
 if __name__ == "__main__":
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    port = int(args[0]) if args else 8765
     socketserver.ThreadingTCPServer.allow_reuse_address = True
     with socketserver.ThreadingTCPServer(("127.0.0.1", port), partial(Handler, directory=str(ROOT))) as httpd:
         print(f"Python GO en http://localhost:{port}  (Ctrl+C para detener)")

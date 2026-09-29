@@ -228,6 +228,12 @@ export function settingsScreen(root, _params, app) {
           <div class="lab-bar"><button class="btn ghost small" data-x="py">${icon("download")} Preparar Python</button><span class="py-status"></span></div>
         </section>
 
+        <section class="card">
+          <h2 class="card-title">¿Algo no funciona?</h2>
+          <p class="muted">Descarga de nuevo todos los archivos del juego. Tu progreso, tus jugadores y Python descargado se conservan.</p>
+          <button class="btn ghost small" data-x="repair">${icon("refresh")} Reparar la app</button>
+        </section>
+
         <section class="card danger-zone">
           <h2 class="card-title">Zona de peligro</h2>
           <p class="muted">Borra este jugador y todo su progreso de este dispositivo. Haz antes una copia de seguridad si quieres conservarlo.</p>
@@ -253,6 +259,23 @@ export function settingsScreen(root, _params, app) {
     const x = e.target.closest("[data-x]")?.dataset.x;
     if (x === "back") return app.back("me");
     if (x === "py") return ensurePython().catch(() => {});
+    if (x === "repair") {
+      // Borra la copia sin conexión (no el progreso, que vive en localStorage) y recarga desde internet.
+      app.persist(true);
+      const b = e.target.closest("[data-x]");
+      b.disabled = true;
+      b.innerHTML = `<span class="spin"></span> Reparando…`;
+      try {
+        for (const r of (await navigator.serviceWorker?.getRegistrations()) || []) await r.unregister();
+        for (const k of await caches.keys()) if (k !== "pygo-runtime") await caches.delete(k);
+        // Refresca también la caché HTTP del navegador con la lista de archivos del service worker.
+        const sw = await (await fetch("sw.js", { cache: "reload" })).text();
+        const list = JSON.parse(sw.match(/const ASSETS = (\[[\s\S]*?\]);/)[1].replace(/,\s*\]/, "]"));
+        await Promise.all(list.map((u) => fetch(u, { cache: "reload" }).catch(() => null)));
+      } catch {}
+      location.reload();
+      return;
+    }
     if (x === "delete") {
       const ok = await confirmBox({ title: `¿Borrar a ${s.name}?`, body: "Se perderán su progreso, estrellas y logros en este dispositivo. No se puede deshacer.", yes: "Borrar", danger: true });
       if (!ok) return;
