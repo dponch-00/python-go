@@ -17,6 +17,13 @@ un laberinto o la consola.
   autocompletado (empaquetado en `js/vendor/`), transiciones entre pantallas y pestañas de rutas en el mapa.
 - Contrarreloj, Reto diario, Repaso espaciado, Consola, 28 logros, tienda, varios jugadores, copia de seguridad.
 
+## App de Android (1.2.0, 2026-10-18)
+
+- `node tools/build-apk.mjs` → `dist/PythonGO-<versión>.apk` (~10.7 MB, Android 7+), con Python incluido.
+- Proyecto Capacitor 8 en `apk/`; Java 21 portátil en `~/.jdks/`; SDK en `C:\Android\Sdk`.
+- **Llave de firma en `apk/keys/` (fuera de git): respaldarla.** Sin ella no se puede actualizar el APK instalado.
+- Falta: probar el APK en un celular real.
+
 ## Verificación
 
 | Prueba | Comando | Resultado |
