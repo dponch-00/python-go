@@ -1,4 +1,17 @@
 *.pyc
 .claude/
 __pycache__/
+apk/.cache/
+apk/android/.gradle/
+apk/android/app/build/
+apk/android/app/src/main/assets/capacitor.config.json
+apk/android/app/src/main/assets/capacitor.plugins.json
+apk/android/app/src/main/assets/public/
+apk/android/build/
+apk/android/capacitor-cordova-android-plugins/
+apk/android/local.properties
+apk/keys/
+apk/node_modules/
+apk/www/
+dist/
 node_modules/

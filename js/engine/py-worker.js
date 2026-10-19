@@ -1,6 +1,11 @@
 // Worker que carga Pyodide (CPython compilado a WebAssembly) y ejecuta el arnés.
 // Corre fuera del hilo principal: si el código del jugador se cuelga, la app lo mata y lo reinicia.
-export const PYODIDE_URL = "https://cdn.jsdelivr.net/npm/pyodide@314.0.7/";
+import { PYODIDE_LOCAL } from "../config.js";
+
+// En la web se descarga del CDN (y queda en caché); en el APK viene incluido en js/vendor/pyodide/.
+export const PYODIDE_URL = PYODIDE_LOCAL
+  ? new URL("../vendor/pyodide/", import.meta.url).href
+  : "https://cdn.jsdelivr.net/npm/pyodide@314.0.7/";
 
 let runFn = null;
 let mazeFn = null;

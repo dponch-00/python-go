@@ -1,0 +1,12 @@
+{
+  "name": "python-go-android",
+  "private": true,
+  "description": "Empaqueta Python GO como app de Android con Capacitor (ver tools/build-apk.mjs)",
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3"
+  }
+}

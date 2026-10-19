@@ -31,6 +31,24 @@ con [Pyodide](https://pyodide.org)) directamente en tu dispositivo, sin servidor
 
 Doble clic en `Iniciar Python GO.bat` (abre `http://localhost:8765` con `tools/serve.py`).
 
+## App de Android (APK)
+
+El APK lleva todo adentro (juego + Python 3.14): funciona sin internet desde la primera vez.
+
+```bash
+node tools/build-apk.mjs
+```
+
+Deja `dist/PythonGO-<versión>.apk`. Usa Capacitor 8 (`apk/`), el Android SDK de `ANDROID_HOME` y
+Java 21 (`~/.jdks/jdk-21*` o `JAVA21_HOME`). La primera vez: `npm install` dentro de `apk/`.
+
+- **Instalar:** pasa el APK al celular, ábrelo y permite «instalar apps de origen desconocido».
+- **Actualizar:** sube `VERSION` en `js/version.js`, vuelve a compilar e instala el APK nuevo encima;
+  el progreso se conserva.
+- **Llave de firma:** la primera compilación crea `apk/keys/` (fuera de git). **Respáldala**: sin ella
+  no se puede actualizar la app instalada (habría que desinstalarla y se perdería el progreso).
+- El progreso del APK y el de la web son independientes: usa Perfil → Copia de seguridad para pasarlo.
+
 ## Publicar cambios
 
 1. `node tools/update-sw.mjs` — actualiza la lista de archivos sin conexión y la versión de caché

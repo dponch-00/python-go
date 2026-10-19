@@ -13,6 +13,7 @@ import { em, avatar, ACH_EM } from "../emoji.js";
 import { codeBlock } from "../highlight.js";
 import { sfx } from "../sfx.js";
 import { VERSION } from "../../version.js";
+import { APK } from "../../config.js";
 
 const DAYS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
 
@@ -224,8 +225,10 @@ export function settingsScreen(root, _params, app) {
 
         <section class="card">
           <h2 class="card-title">Python sin conexión</h2>
-          <p class="muted">Los laboratorios y la consola usan Python real (unos 13 MB). Se descarga una vez y queda guardado para jugar sin internet.</p>
-          <div class="lab-bar"><button class="btn ghost small" data-x="py">${icon("download")} Preparar Python</button><span class="py-status"></span></div>
+          <p class="muted">${APK
+            ? "Python viene incluido en esta app: los laboratorios, laberintos y la consola funcionan sin internet."
+            : "Los laboratorios, laberintos y la consola usan Python real (unos 13 MB). Se descarga una vez y queda guardado para jugar sin internet."}</p>
+          <div class="lab-bar"><button class="btn ghost small" data-x="py">${icon(APK ? "play" : "download")} ${APK ? "Iniciar Python" : "Preparar Python"}</button><span class="py-status"></span></div>
         </section>
 
         <section class="card">
@@ -332,11 +335,11 @@ export function backupScreen(root, _params, app) {
       ${s ? `
       <section class="card">
         <h2 class="card-title">${icon("upload")} Llevar mi progreso</h2>
-        <p class="muted">Copia este código y pégalo en otro dispositivo (Perfil → Copia de seguridad → Importar). También puedes guardarlo como archivo.</p>
+        <p class="muted">Copia este código y pégalo en otro dispositivo (Perfil → Copia de seguridad → Importar).${APK ? " Guárdalo en tus notas o mándatelo por mensaje." : " También puedes guardarlo como archivo."}</p>
         <textarea id="bk-out" class="bk-code" readonly rows="4">${esc(code)}</textarea>
         <div class="row">
           <button class="btn primary small" data-x="copy">${icon("copy")} Copiar código</button>
-          <button class="btn ghost small" data-x="file">${icon("download")} Guardar archivo</button>
+          ${APK ? "" : `<button class="btn ghost small" data-x="file">${icon("download")} Guardar archivo</button>`}
         </div>
       </section>` : ""}
       <section class="card">

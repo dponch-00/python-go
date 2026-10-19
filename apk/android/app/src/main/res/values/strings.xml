@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Python GO</string>
+    <string name="title_activity_main">Python GO</string>
+    <string name="package_name">io.github.dponch00.pythongo</string>
+    <string name="custom_url_scheme">io.github.dponch00.pythongo</string>
+</resources>

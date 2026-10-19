@@ -1,0 +1,14 @@
+{
+  "appId": "io.github.dponch00.pythongo",
+  "appName": "Python GO",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#0F1B2D"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover"
+    }
+  }
+}

@@ -16,6 +16,7 @@ import { rankingScreen, profilesScreen, onboardScreen } from "./ui/screens/socia
 import { meScreen, shopScreen, settingsScreen, backupScreen } from "./ui/screens/me.js";
 
 export { VERSION } from "./version.js";
+import { APK } from "./config.js";
 
 const TABS = [
   { route: "map", label: "Mapa", icon: "map" },
@@ -219,7 +220,8 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => ap
 
 // ---------- Service worker (instalable y sin conexión) ----------
 function registerSW() {
-  if (!("serviceWorker" in navigator) || location.protocol === "file:") return;
+  // En el APK todo viene incluido: no hace falta el modo sin conexión de la web.
+  if (APK || !("serviceWorker" in navigator) || location.protocol === "file:") return;
   navigator.serviceWorker.register("./sw.js").then((reg) => {
     const offer = (w) => {
       modal({
