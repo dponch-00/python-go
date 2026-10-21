@@ -24,6 +24,18 @@ un laberinto o la consola.
 - **Llave de firma en `apk/keys/` (fuera de git): respaldarla.** Sin ella no se puede actualizar el APK instalado.
 - Falta: probar el APK en un celular real.
 
+## Versión 1.2.1 (2026-10-21) — sin publicar
+
+- **Convivencia con otras apps del mismo origen.** `dponch-00.github.io` también sirve MKompact y comparte
+  CacheStorage y service workers. Antes, al activarse, el SW borraba *todas* las cachés del origen y
+  «Reparar la app» quitaba *todos* los service workers del origen: dejaba sin modo offline a MKompact (y
+  MKompact v8 hacía lo mismo con Python GO). Ahora el SW solo borra cachés `pygo-` de versiones anteriores
+  (conserva `pygo-runtime`) y «Reparar la app» solo quita el SW con alcance `/python-go/` y las cachés `pygo-`.
+- Probado en local con Chrome headless (ambas apps en `localhost:8792/python-go/` y `/Mkompact/`): se
+  reprodujo el fallo con 1.2.0 + MKompact v8, y con 1.2.1 + MKompact v9 la caché de la otra app y una caché
+  ajena (`ais-test`) sobreviven a activaciones, «Reparar la app» y «Reinstalar limpio»; las dos abren sin conexión.
+- Falta: publicar (push a `main`). Conviene publicar a la vez MKompact v9. El APK no cambia (no usa el SW).
+
 ## Verificación
 
 | Prueba | Comando | Resultado |

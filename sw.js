@@ -2,7 +2,7 @@
 // La lista ASSETS y CACHE las regenera `node tools/update-sw.mjs` (ejecútalo antes de publicar).
 
 // ASSETS:start
-const CACHE = "pygo-1.2.0-7d20c74b";
+const CACHE = "pygo-1.2.1-79dd6dc0";
 const ASSETS = [
   "./",
   "css/app.css",
@@ -141,6 +141,9 @@ const ASSETS = [
 // ASSETS:end
 
 const RUNTIME = "pygo-runtime";
+// Las cachés de esta app empiezan con "pygo-". Otras apps comparten el origen (dponch-00.github.io)
+// y por tanto CacheStorage: al limpiar se borran solo las cachés propias de versiones anteriores.
+const PREFIX = "pygo-";
 const RUNTIME_HOSTS = ["cdn.jsdelivr.net"];
 // En localhost se pide primero a la red para ver los cambios al instante (y la caché queda de respaldo).
 const LOCAL_DEV = ["localhost", "127.0.0.1"].includes(location.hostname);
@@ -179,7 +182,9 @@ self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== RUNTIME).map((k) => caches.delete(k))))
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k.startsWith(PREFIX) && k !== CACHE && k !== RUNTIME).map((k) => caches.delete(k)))
+      )
       .then(() => self.clients.claim())
   );
 });

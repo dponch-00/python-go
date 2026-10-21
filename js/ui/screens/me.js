@@ -269,8 +269,10 @@ export function settingsScreen(root, _params, app) {
       b.disabled = true;
       b.innerHTML = `<span class="spin"></span> Reparando…`;
       try {
-        for (const r of (await navigator.serviceWorker?.getRegistrations()) || []) await r.unregister();
-        for (const k of await caches.keys()) if (k !== "pygo-runtime") await caches.delete(k);
+        // Solo lo de esta app: otras apps del mismo origen tienen sus propios service workers y cachés.
+        const scope = new URL("./", location.href).href;
+        for (const r of (await navigator.serviceWorker?.getRegistrations()) || []) if (r.scope === scope) await r.unregister();
+        for (const k of await caches.keys()) if (k.startsWith("pygo-") && k !== "pygo-runtime") await caches.delete(k);
         // Refresca también la caché HTTP del navegador con la lista de archivos del service worker.
         const sw = await (await fetch("sw.js", { cache: "reload" })).text();
         const list = JSON.parse(sw.match(/const ASSETS = (\[[\s\S]*?\]);/)[1].replace(/,\s*\]/, "]"));
